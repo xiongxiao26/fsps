@@ -23,9 +23,8 @@ function sfh_weight(sfh, imin, imax)
   !   array of shape `ntfull` that gives the proper weights for the SSPs to
   !   produce the SFH.
 
-  use sps_vars, only: ntfull, time_full, tiny_logt, &
+  use SPS_VARS_MODULE_NAME, only: ntfull, time_full, tiny_logt, &
                       SFHPARAMS, SP
-  use sps_utils, only: intsfwght, sfhlimit, locate
   implicit none
 
   type(SFHPARAMS), intent(in) :: sfh
@@ -35,7 +34,7 @@ function sfh_weight(sfh, imin, imax)
 
   integer :: i, istart
   real(SP), dimension(2) :: tlim
-  real(SP) :: dt, delta_time, log_tb
+  real(SP) :: dt, log_tb
   real(SP), dimension(ntfull) :: tmp_wght=0. !left=0., right=0.
 
 
@@ -123,7 +122,7 @@ function delta_time(logt1, logt2)
   !
   ! Returns (logt2 - logt1), or (10**logt2 - 10**logt1)
 
-  use sps_vars, only: interpolation_type, SP
+  use SPS_VARS_MODULE_NAME, only: interpolation_type, SP
   implicit none
 
   real(SP), intent(in) :: logt1, logt2

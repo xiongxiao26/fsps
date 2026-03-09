@@ -7,8 +7,7 @@ SUBROUTINE SMOOTHSPEC(lambda,spec,sigma,minl,maxl,ires)
   !If optional input ires is present, then the spectrum will be
   !smoothed by a wavelength dependent velocity dispersion.
 
-  USE sps_vars
-  USE sps_utils, ONLY : locate,linterp,tsum,linterparr
+  USE SPS_VARS_MODULE_NAME
   IMPLICIT NONE
   
   REAL(SP), INTENT(inout), DIMENSION(nspec) :: spec

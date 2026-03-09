@@ -4,8 +4,7 @@ SUBROUTINE ADD_REMNANTS(mass,maxmass)
   !of the SSP.  These initial-mass-dependent remnant
   !formulae are taken from Renzini & Ciotti 1993.
 
-  USE sps_vars
-  USE sps_utils, ONLY : imf, funcint
+  USE SPS_VARS_MODULE_NAME
   IMPLICIT NONE
 
   REAL(SP), INTENT(inout) :: mass

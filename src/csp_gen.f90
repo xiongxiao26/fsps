@@ -34,11 +34,10 @@ subroutine csp_gen(mass_ssp, lbol_ssp, spec_ssp, &
   ! total_weights:
   !    The weights(masses) for each SSP in the composite
 
-  use sps_vars, only: ntfull, nspec, time_full, tiny_number, tiny_logt, &
-                      zlegend, nz, sfh_tab, ntabsfh, compute_light_ages, &
+  use SPS_VARS_MODULE_NAME, only: ntfull, nspec, time_full, tiny_number, tiny_logt, &
+                      zlegend, nz, compute_light_ages, &
                       SFHPARAMS, PARAMS, SP, nemline, dust_type, &
                       weight_ssp, spec_young, spec_old
-  use sps_utils, only: locate, sfh_weight, sfhinfo, add_dust
   implicit none
 
   real(SP), intent(in), dimension(ntfull, nzin) :: mass_ssp, lbol_ssp
@@ -167,7 +166,7 @@ subroutine csp_gen(mass_ssp, lbol_ssp, spec_ssp, &
   endif
 
 
-  ! Tabular.  Time units in sfh_tab are assumed to be linear years of time
+  ! Tabular.  Time units in pset%sfh_tab are assumed to be linear years of time
   ! since big bang (forward time).  We are going to treat this as a sum of
   ! linear SFHs, one for each bin in the table
   if (pset%sfh.eq.2.or.pset%sfh.eq.3) then
@@ -176,21 +175,21 @@ subroutine csp_gen(mass_ssp, lbol_ssp, spec_ssp, &
      ! Assume linear SFH within the bins
      sfhpars%type = 5
      ! Loop over each bin in the table.
-     do j=1, ntabsfh-1
+     do j=1, pset%ntabsfh-1
         ! Edges of the bin in lookback time. Note that the order of sfhtab gets
         ! flipped, since it is given in forward time and then we convert to
         ! lookback time.  So j=0 is the `oldest` in terms of lookback time
-        t1 = tage*1e9 - sfh_tab(1, j+1)
-        t2 = tage*1e9 - sfh_tab(1, j)
+        t1 = tage*1e9 - pset%sfh_tab(1, j+1)
+        t2 = tage*1e9 - pset%sfh_tab(1, j)
         if (t2.lt.0) then
            ! Entire bin is in the future, skip
            cycle
         endif
         ! Metallicity of the bin. Just a straight average.
-        zbin = (sfh_tab(3, j) + sfh_tab(3, j+1)) / 2
+        zbin = (pset%sfh_tab(3, j) + pset%sfh_tab(3, j+1)) / 2
 
         ! Linear slope.  Positive should be sfr *decreasing* in time since big bang.
-        sfhpars%sf_slope = -(sfh_tab(2, j+1) - sfh_tab(2, j)) / (t2 - t1) / sfh_tab(2, j+1)
+        sfhpars%sf_slope = -(pset%sfh_tab(2, j+1) - pset%sfh_tab(2, j)) / (t2 - t1) / pset%sfh_tab(2, j+1)
         ! Set integration limits using bin edges clipped to valid times.
         ! That is, don't include any portion of a bin that goes to negative
         ! time, or beyond the oldest isochrone.
@@ -199,7 +198,7 @@ subroutine csp_gen(mass_ssp, lbol_ssp, spec_ssp, &
         sfhpars%sf_trunc = sfhpars%tage - sfhpars%tq
         ! Mass that formed within these valid times.
         dt = (sfhpars%tage - sfhpars%tq)
-        m2 = sfh_tab(2, j+1) * (1 + sfhpars%sf_slope/2. * (sfhpars%tage + sfhpars%tq - 2*t1)) * dt
+        m2 = pset%sfh_tab(2, j+1) * (1 + sfhpars%sf_slope/2. * (sfhpars%tage + sfhpars%tq - 2*t1)) * dt
         ! min and max ssps to consider, being conservative.
         imin = min(max(locate(time_full, log10(t1)) - 1, 0), ntfull)
         imax = min(max(locate(time_full, log10(t2)) + 2, 0), ntfull)
@@ -326,7 +325,7 @@ subroutine convert_sfhparams(pset, tage, sfh)
   !       - `sf_slope` is the fractional change in the SFR in inverse years.  It is
   !          positive for SFR that increases with *lookback* time.
   !
-  use sps_vars, only: tiny_number, SFHPARAMS, PARAMS, SP
+  use SPS_VARS_MODULE_NAME, only: tiny_number, SFHPARAMS, PARAMS, SP
   implicit none
 
   type(PARAMS), intent(in) :: pset

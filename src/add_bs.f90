@@ -16,8 +16,7 @@ SUBROUTINE ADD_BS(s_bs,t,mini,mact,logl,logt,logg,phase, &
   !Note that the parameter bhb_sbs_time, set in sps_vars.f90,
   !sets the turn-on time for this modification
 
-  USE sps_vars
-  USE sps_utils, ONLY : linterp
+  USE SPS_VARS_MODULE_NAME
   IMPLICIT NONE
 
   REAL(SP), INTENT(inout), DIMENSION(nt,nm) :: mini,mact,&

@@ -4,10 +4,7 @@ SUBROUTINE COMPSP(write_compsp, nzin, outfile,&
   !
   !
   !N.B. variables not otherwise defined come from sps_vars.f90
-  use sps_vars
-  use sps_utils, only: write_isochrone, add_nebular, setup_tabular_sfh, &
-                       csp_gen, sfhinfo, linterp, agn_dust, &
-                       smoothspec, igm_absorb, getindx, getmags
+  use SPS_VARS_MODULE_NAME
 
   implicit none
 
@@ -43,7 +40,7 @@ SUBROUTINE COMPSP(write_compsp, nzin, outfile,&
      STOP
   ENDIF
 
-  call setup_tabular_sfh(pset, nzin)
+  !call setup_tabular_sfh(pset, nzin)
 
   ! Make sure various variables are set correctly
   IF (pset%tage.GT.tiny_number) THEN
@@ -102,7 +99,7 @@ SUBROUTINE COMPSP(write_compsp, nzin, outfile,&
         age = pset%tage
      else if ((pset%tage.eq.-99).and.((pset%sfh.eq.2).or.(pset%sfh.eq.3))) then
         ! Special switch to just do the last time in the tabular file
-        age = maxval(sfh_tab(1, 1:ntabsfh)) / 1E9
+        age = maxval(pset%sfh_tab(1, 1:pset%ntabsfh)) / 1E9
      else
         ! Otherwise we will calculate composite spectra for every SSP age.
         age = 10**(time_full(i)-9.)
@@ -188,7 +185,7 @@ SUBROUTINE COMPSP_WARNING(maxtime,pset,nzin,write_compsp)
 
   !check that variables are properly set
 
-  USE sps_vars
+  USE SPS_VARS_MODULE_NAME
   IMPLICIT NONE
   INTEGER, INTENT(in) :: nzin, write_compsp
   REAL(SP), INTENT(in) :: maxtime
@@ -310,8 +307,7 @@ END SUBROUTINE COMPSP_WARNING
 
 SUBROUTINE COMPSP_SETUP_OUTPUT(write_compsp,pset,outfile,imin,imax)
 
-  USE sps_vars
-  USE sps_utils, ONLY : vactoair
+  USE SPS_VARS_MODULE_NAME
   IMPLICIT NONE
   INTEGER, INTENT(in) :: imin,imax,write_compsp
   REAL(SP) :: writeage
@@ -429,7 +425,7 @@ SUBROUTINE COMPSP_HEADER(unit,pset)
 
   !writes headers for the .mag, .spec, .indx files
 
-  USE sps_vars
+  USE SPS_VARS_MODULE_NAME
   IMPLICIT NONE
   INTEGER, INTENT(in) :: unit
   TYPE(PARAMS), INTENT(in) :: pset
@@ -470,7 +466,7 @@ SUBROUTINE SAVE_COMPSP(write_compsp,cspo,time,mass,&
 
   !routine to print and save outputs
 
-  USE sps_vars
+  USE SPS_VARS_MODULE_NAME
   IMPLICIT NONE
   INTEGER, INTENT(in) :: write_compsp
   REAL(SP), INTENT(in)    :: time,mass,lbol,sfr,mdust,mformed

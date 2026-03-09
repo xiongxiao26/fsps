@@ -31,14 +31,14 @@ function intsfwght(sspind, logt, sfh)
   !  intsfwght:
   !    The exact definite integral between the limits specified in `logt`.
   
-  use sps_vars, only: interpolation_type, SFHPARAMS, SP
+  use SPS_VARS_MODULE_NAME, only: interpolation_type, SFHPARAMS, SP
   implicit none
   
   integer, intent(in) :: sspind
   real(SP), intent(in), dimension(2) :: logt
   type(SFHPARAMS), intent(in) :: sfh
 
-  real(SP) :: intsfwght, sfwght_log, sfwght_lin
+  real(SP) :: intsfwght
 
   if (interpolation_type.eq.0) then
      intsfwght =  sfwght_log(sspind, logt(2), sfh) - sfwght_log(sspind, logt(1), sfh)
@@ -75,7 +75,7 @@ function sfwght_log(sspind, logt, sfh)
   !  sfwght_log:
   !    The exact indefinite integral, evaluated at `logt`.  Scalar float.
   
-  use sps_vars, only: time_full, tiny_logt, SFHPARAMS, SP
+  use SPS_VARS_MODULE_NAME, only: time_full, tiny_logt, SFHPARAMS, SP
   implicit none
   
   integer, intent(in) :: sspind
@@ -84,7 +84,7 @@ function sfwght_log(sspind, logt, sfh)
 
   real(SP) :: sfwght_log
 
-  real(SP) :: loge, ei
+  real(SP) :: loge
   real(SP) :: logage, tprime ! intermediate time variables
   real(SP) :: a, b, c ! dummy variables used to break up long expressions
 
@@ -154,7 +154,7 @@ function sfwght_lin(sspind, t, sfh)
   !  sfwght_lin:
   !    The indefinite integral, evaluated at `t`
 
-  use sps_vars, only: time_full, tiny_logt, SFHPARAMS, SP
+  use SPS_VARS_MODULE_NAME, only: time_full, tiny_logt, SFHPARAMS, SP
   implicit none
   
   integer, intent(in) :: sspind 

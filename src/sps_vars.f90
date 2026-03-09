@@ -1,4 +1,4 @@
-MODULE SPS_VARS
+MODULE SPS_VARS_MODULE_NAME
 
   ! module to set up most arrays and variables
 
@@ -78,7 +78,7 @@ MODULE SPS_VARS
   INTEGER :: tpagb_norm_type=2
 
   !turn-on time for BHB and SBS phases, time is in log(yrs)
-  REAL(SP), PARAMETER :: bhb_sbs_time=9.5
+  REAL(SP) :: bhb_sbs_time=9.5
 
   !turn on/off convolution of SSP with P(Z) (pz_convol.f90)
   !NB: pz_convol.f90 has not been tested in some time, use with caution
@@ -97,7 +97,7 @@ MODULE SPS_VARS
 
   !Use Aringer et al. (2009) Carbon star library if set
   !otherwise use Lancon & Wood (2002) empirical spectra
-  INTEGER, PARAMETER :: cstar_aringer=1
+  INTEGER :: cstar_aringer=1
 
   !turn on/off computation of light-weighted stellar ages
   !NB: currently only works with sfh=1,4 options
@@ -294,7 +294,7 @@ MODULE SPS_VARS
   !max number of lines to read in
   INTEGER, PARAMETER ::  nlines=1000000
   !max number of lines in tabulated SFH, LSF
-  INTEGER, PARAMETER :: ntabmax=20000
+  INTEGER, PARAMETER :: ntabmax=100
   !dimensions of BaSeL library
   INTEGER, PARAMETER :: ndim_logt=68, ndim_logg=19
   !number of O-rich, C-rich AGB spectra (and Aringer C-rich spec)
@@ -430,10 +430,6 @@ MODULE SPS_VARS
   !array holding redshift-age-DL relations
   REAL(SP), DIMENSION(500,3) :: cosmospl=0.
 
-  !array holding tabulated SFH
-  REAL(SP), DIMENSION(3,ntabmax) :: sfh_tab=0.
-  INTEGER :: ntabsfh=0
-
   !array of bandpass filters
   REAL(SP), DIMENSION(nspec,nbands) :: bands
   !magnitude of the Sun in all filters
@@ -442,7 +438,8 @@ MODULE SPS_VARS
   !spectrum of Sun, for absolute mags of Sun
   REAL(SP), DIMENSION(nspec)  :: vega_spec=0.,sun_spec=0.
   !common wavelength and frequench arrays
-  REAL(SP), DIMENSION(nspec)  :: spec_lambda=0.,spec_nu=0.0
+  REAL(SP), DIMENSION(nspec), TARGET  :: spec_lambda=0.
+  REAL(SP), DIMENSION(nspec)  :: spec_nu=0.0
   !common wavelength and frequency arrays for dummy resolution files
   REAL(SP), DIMENSION(nspec)  :: spec_res=0.
 
@@ -572,6 +569,8 @@ MODULE SPS_VARS
      INTEGER, DIMENSION(nbands) :: mag_compute=1
      INTEGER, DIMENSION(nt) :: ssp_gen_age=1
      CHARACTER(50) :: imf_filename='', sfh_filename=''
+     REAL(SP), DIMENSION(3,ntabmax) :: sfh_tab=0.
+     INTEGER :: ntabsfh=0
   END TYPE PARAMS
 
   !structure for the output of the compsp routine
@@ -624,4 +623,4 @@ MODULE SPS_VARS
   !INTEGER :: csp_grid_flag=0
 
 
-END MODULE SPS_VARS
+END MODULE SPS_VARS_MODULE_NAME

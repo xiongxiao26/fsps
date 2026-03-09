@@ -4,7 +4,7 @@ FUNCTION TSUM(xin,yin)
   !NB: notice the abs(dx) in the equation below.  The x-axis can
   !therefore be in reverse order
 
-  USE sps_vars
+  USE SPS_VARS_MODULE_NAME
   IMPLICIT NONE
 
   REAL(SP), DIMENSION(:), INTENT(in) :: xin,yin

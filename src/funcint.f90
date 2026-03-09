@@ -1,6 +1,6 @@
 FUNCTION MYARTH(first,increment,n)
 
-  USE sps_vars
+  USE SPS_VARS_MODULE_NAME
   IMPLICIT NONE
   REAL(SP), INTENT(IN) :: first,increment
   INTEGER, INTENT(IN) :: n
@@ -36,25 +36,17 @@ END FUNCTION MYARTH
 
 SUBROUTINE MYTRAPZD(func,a,b,s,n)
 
-  USE sps_vars
+  USE SPS_VARS_MODULE_NAME
   IMPLICIT NONE
   REAL(SP), INTENT(IN) :: a,b
   REAL(SP), INTENT(INOUT) :: s
   INTEGER, INTENT(IN) :: n
   INTERFACE
      FUNCTION func(x)
-       USE sps_vars
+       USE SPS_VARS_MODULE_NAME
        REAL(SP), DIMENSION(:), INTENT(IN) :: x
        REAL(SP), DIMENSION(SIZE(x)) :: func
      END FUNCTION func
-  END INTERFACE
-  INTERFACE
-     FUNCTION myarth(first,increment,n)
-       USE sps_vars
-       REAL(SP), INTENT(IN) :: first,increment
-       INTEGER, INTENT(IN) :: n
-       REAL(SP), DIMENSION(n) :: myarth
-     END FUNCTION myarth
   END INTERFACE
   REAL(SP) :: del,fsum
   INTEGER :: it
@@ -75,7 +67,7 @@ END SUBROUTINE MYTRAPZD
 
 SUBROUTINE MYPOLINT(xa,ya,x,y,dy)
 
-  USE sps_vars
+  USE SPS_VARS_MODULE_NAME
   IMPLICIT NONE
   REAL(SP), DIMENSION(:), INTENT(IN) :: xa,ya
   REAL(SP), INTENT(IN) :: x
@@ -116,24 +108,16 @@ END SUBROUTINE MYPOLINT
 
 FUNCTION FUNCINT(func,a,b)
 
-  USE sps_vars
+  USE SPS_VARS_MODULE_NAME
   IMPLICIT NONE
   REAL(SP), INTENT(IN) :: a,b
   REAL(SP) :: funcint
   INTERFACE
      FUNCTION func(x)
-       USE sps_vars
+       USE SPS_VARS_MODULE_NAME
        REAL(SP), DIMENSION(:), INTENT(IN) :: x
        REAL(SP), DIMENSION(size(x)) :: func
      END FUNCTION func
-  END INTERFACE
-  INTERFACE 
-     SUBROUTINE MYPOLINT(xa,ya,x,y,dy)
-       USE sps_vars
-       REAL(SP), DIMENSION(:), INTENT(IN) :: xa,ya
-       REAL(SP), INTENT(IN) :: x
-       REAL(SP), INTENT(OUT) :: y,dy
-     END SUBROUTINE MYPOLINT
   END INTERFACE
   INTEGER, PARAMETER :: JMAX=20,JMAXP=JMAX+1,K=5,KM=K-1
   REAL(SP), PARAMETER :: EPS=1.0e-7

@@ -2,8 +2,7 @@ FUNCTION LINTERP(xin,yin,xout)
 
   !routine to linearly interpolate a function yin(xin) at xout
 
-  USE sps_vars
-  USE sps_utils, ONLY: locate
+  USE SPS_VARS_MODULE_NAME
   IMPLICIT NONE
   REAL(SP), DIMENSION(:), INTENT(in) :: xin,yin
   REAL(SP), INTENT(in)  :: xout

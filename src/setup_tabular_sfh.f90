@@ -13,10 +13,10 @@
 
 subroutine setup_tabular_sfh(pset, nzin)
 
-  use sps_vars, only: sfh_tab, ntabsfh, ntabmax, nz, &
+  use SPS_VARS_MODULE_NAME, only: ntabmax, nz, &
                       tiny_number, tiny30, PARAMS, SPS_HOME
   implicit none
-  type(PARAMS), intent(in) :: pset
+  type(PARAMS), intent(inout) :: pset
   integer, intent(in) :: nzin
   integer :: stat, n
 
@@ -36,10 +36,10 @@ subroutine setup_tabular_sfh(pset, nzin)
      ENDIF
      DO n=1,ntabmax
         IF (nzin.EQ.nz) THEN
-           READ(3,*,IOSTAT=stat) sfh_tab(1,n),sfh_tab(2,n),sfh_tab(3,n)
+           READ(3,*,IOSTAT=stat) pset%sfh_tab(1,n),pset%sfh_tab(2,n),pset%sfh_tab(3,n)
         ELSE
-           READ(3,*,IOSTAT=stat) sfh_tab(1,n),sfh_tab(2,n)
-           sfh_tab(3,n)=0.0
+           READ(3,*,IOSTAT=stat) pset%sfh_tab(1,n),pset%sfh_tab(2,n)
+           pset%sfh_tab(3,n)=0.0
         ENDIF
         IF (stat.NE.0) GOTO 29
      ENDDO
@@ -49,8 +49,8 @@ subroutine setup_tabular_sfh(pset, nzin)
 29   CONTINUE
      CLOSE(3)
 
-     ntabsfh = n-1
-     sfh_tab(1,1:ntabsfh) = sfh_tab(1,1:ntabsfh)*1E9 !convert to yrs
+     pset%ntabsfh = n-1
+     pset%sfh_tab(1,1:pset%ntabsfh) = pset%sfh_tab(1,1:pset%ntabsfh)*1E9 !convert to yrs
 
      !special switch to compute only the last time output
      !in the tabulated file
@@ -58,17 +58,17 @@ subroutine setup_tabular_sfh(pset, nzin)
 
   ELSE IF (pset%sfh.EQ.3) THEN
 
-     !sfh_tab array is supposed to already be filled in, check that it is
-     IF (ntabsfh.EQ.0) THEN
-        WRITE(*,*) 'COMPSP ERROR: sfh=3 but sfh_tab array not initialized!'
+     !pset%sfh_tab array is supposed to already be filled in, check that it is
+     IF (pset%ntabsfh.EQ.0) THEN
+        WRITE(*,*) 'COMPSP ERROR: sfh=3 but pset%sfh_tab array not initialized!'
         STOP
      ENDIF
 
   ENDIF
 
   ! clip SFR to a minimum of 1e-30
-  do n=1, ntabsfh
-     sfh_tab(2, n) = max(sfh_tab(2, n), tiny30)
+  do n=1, pset%ntabsfh
+     pset%sfh_tab(2, n) = max(pset%sfh_tab(2, n), tiny30)
   enddo
 
 end subroutine setup_tabular_sfh

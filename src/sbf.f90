@@ -4,8 +4,7 @@ SUBROUTINE SBF(pset,outfile)
   !SBFs for each point.  SBF magnitudes are a light-weighted average
   !of the stellar luminosities over stellar mass
 
-  USE sps_vars
-  USE sps_utils, ONLY : imf_weight,mod_hb,add_bs,mod_gb,getmags,getspec
+  USE SPS_VARS_MODULE_NAME
   IMPLICIT NONE
 
   CHARACTER(100), INTENT(in) :: outfile

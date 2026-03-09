@@ -4,8 +4,7 @@ FUNCTION ATTN_CURVE(lambda,dtype,pset)
   ! The V-band optical depth is 1 unless option 3 (Witt & Gordon models) is
   ! selected as those grids fully predict the actual attn curves.
 
-  USE sps_vars
-  USE sps_utils, ONLY : locate
+  USE SPS_VARS_MODULE_NAME
   IMPLICIT NONE
 
   INTEGER, INTENT(in) :: dtype

@@ -2,8 +2,7 @@ SUBROUTINE ADD_XRB(pset,sspi,sspo)
 
   ! Routine to add emission from X-ray binaries
 
-  USE sps_vars
-  USE sps_utils, ONLY : locate,tsum
+  USE SPS_VARS_MODULE_NAME
   IMPLICIT NONE
 
   INTEGER :: t,a1,z1

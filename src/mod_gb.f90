@@ -3,7 +3,7 @@ SUBROUTINE MOD_GB(zz,t,age,delt,dell,pagb,redgb,agb,&
 
   !routine to modify TP-AGB stars, HB+RGB, and post-AGB stars. 
 
-  USE sps_vars
+  USE SPS_VARS_MODULE_NAME
   IMPLICIT NONE
 
   INTEGER,  INTENT(in) :: t, nn,zz

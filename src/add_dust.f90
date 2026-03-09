@@ -31,8 +31,7 @@ SUBROUTINE ADD_DUST(pset,csp1,csp2,specdust,mdust,ncsp1,ncsp2,nebdust)
   !  The dust mass required to produce the absorbed luminosity for the given dust emission parameters
 
 
-  USE sps_vars
-  USE sps_utils, ONLY : tsum, locate, attn_curve, linterparr
+  USE SPS_VARS_MODULE_NAME
   IMPLICIT NONE
 
   REAL(SP), DIMENSION(nspec), INTENT(in) :: csp1,csp2

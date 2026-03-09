@@ -4,8 +4,7 @@ FUNCTION IGM_ABSORB(lam,spec,zz,factor)
   !this routine includes a fudge factor (accessed by pset%igm_factor)
   !that allows the user to scale the IGM optical depth
 
-  USE sps_vars
-  USE sps_utils, ONLY : locate
+  USE SPS_VARS_MODULE_NAME
   IMPLICIT NONE
 
   REAL(SP), DIMENSION(nspec), INTENT(in) :: lam,spec

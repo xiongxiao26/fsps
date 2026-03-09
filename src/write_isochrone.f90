@@ -4,8 +4,7 @@ SUBROUTINE WRITE_ISOCHRONE(outfile,pset)
   !note that the output age grid is the native spacing, not boosted
   !by the parameter time_res_incr
 
-  USE sps_vars
-  USE sps_utils, ONLY : getmags,getspec,imf_weight,mod_hb,mod_gb,add_bs
+  USE SPS_VARS_MODULE_NAME
   IMPLICIT NONE
 
   INTEGER :: i,tt,zz

@@ -3,7 +3,7 @@ FUNCTION COMPUTE_TAU1(cstar,mact,logt,logl,logg,zz,lmdot)
   !routine to compute tau at 1um from input
   !stellar parameters.  See Villaume et al. (2015)
   
-  USE sps_vars
+  USE SPS_VARS_MODULE_NAME
   IMPLICIT NONE
   INTEGER, INTENT(in) :: cstar
   REAL(SP), INTENT(in)  :: mact,logt,logl,logg, zz,lmdot
@@ -96,14 +96,13 @@ SUBROUTINE ADD_AGB_DUST(weight,tspec,mact,logt,logl,logg,zz,&
   !then looks up the corresponding DUSTY model given the C/O
   !ratio and Teff.
   
-  USE sps_vars
-  USE sps_utils, ONLY: locate, smoothspec
+  USE SPS_VARS_MODULE_NAME
   IMPLICIT NONE
 
   REAL(SP), DIMENSION(nspec), INTENT(inout) :: tspec
   REAL(SP), INTENT(in)  :: weight,mact,logt,logl,logg,zz,tco,lmdot
   INTEGER :: cstar,jlo,klo
-  REAL(SP) :: tau1,dj,dk, compute_tau1, loggi
+  REAL(SP) :: tau1,dj,dk, loggi
   REAL(SP), DIMENSION(nspec) :: dusty
   
   !-----------------------------------------------------------!

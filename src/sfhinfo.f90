@@ -27,10 +27,8 @@ subroutine sfhinfo(pset, age, mfrac, sfr, frac_linear)
   !   If pset%sfh=5, this gives the fraction of m_formed(age) that was formed
   !   in the linear portion.
   !
-  use sps_vars, only: time_full, ntfull, tiny_number, &
-                      sfh_tab, ntabsfh, &
+  use SPS_VARS_MODULE_NAME, only: time_full, ntfull, tiny_number, &
                       PARAMS, SP
-  use sps_utils, only: locate
   implicit none
 
   type(PARAMS), intent(in) :: pset
@@ -39,7 +37,7 @@ subroutine sfhinfo(pset, age, mfrac, sfr, frac_linear)
   real(SP), intent(out) :: mfrac, sfr, frac_linear
 
   real(SP) :: Tmax, Tprime, Tz, Ttrunc, Thi
-  real(SP) :: m, gammainc
+  real(SP) :: m
   real(SP) :: mass_tau, mass_linear, mfrac_burst
   real(SP) :: total_mass_tau, total_mass_linear
   real(SP) :: sfr_tau, sfr_trunc, sfr_const
@@ -176,9 +174,9 @@ subroutine sfhinfo(pset, age, mfrac, sfr, frac_linear)
   ! Tabular.  Simple linear interpolation to get the sfr.
   ! The table is in units of yrs of forward time and M_sun/yr.
   if ((pset%sfh.eq.2).or.(pset%sfh.eq.3)) then
-     itab = max(min(locate(sfh_tab(1, 1:ntabsfh), age*1e9), ntabsfh-1), 1)
-     m = (sfh_tab(2, itab+1) - sfh_tab(2, itab)) / (sfh_tab(1, itab+1) - sfh_tab(1, itab))
-     sfr = sfh_tab(2, itab) + m * (age*1e9 - sfh_tab(1, itab))
+     itab = max(min(locate(pset%sfh_tab(1, 1:pset%ntabsfh), age*1e9), pset%ntabsfh-1), 1)
+     m = (pset%sfh_tab(2, itab+1) - pset%sfh_tab(2, itab)) / (pset%sfh_tab(1, itab+1) - pset%sfh_tab(1, itab))
+     sfr = pset%sfh_tab(2, itab) + m * (age*1e9 - pset%sfh_tab(1, itab))
      sfr = max(sfr, 0.0) * 1e9 ! convert to per Gyr
   endif
 
@@ -191,7 +189,7 @@ function gammainc(power, arg)
   !
   ! Calculate incomplete gamma for a = 1 or 2
 
-  use sps_vars, only: SP
+  use SPS_VARS_MODULE_NAME, only: SP
   implicit none
   integer, intent(in) :: power
   real(SP), intent(in) :: arg
