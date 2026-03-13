@@ -16,10 +16,10 @@ SUBROUTINE COMPSP(write_compsp, nzin, outfile,&
 
   TYPE(COMPSPOUT), INTENT(inout), DIMENSION(ntfull) :: ocompsp
 
-  REAL(SP), DIMENSION(nspec, ntfull, nzin)   :: spec_ssp
-  REAL(SP), DIMENSION(nemline, ntfull, nzin) :: emlin_ssp
+  REAL(SP), ALLOCATABLE, DIMENSION(:,:,:)   :: spec_ssp
+  REAL(SP), ALLOCATABLE, DIMENSION(:,:,:) :: emlin_ssp
   REAL(SP), DIMENSION(nemline) :: emlin_csp
-  REAL(SP) :: lbol_csp, mass_csp, mdust_csp
+  REAL(SP) :: lbol_csp, mass_csp, mdust_csp, mformed_csp
   REAL(SP) :: age, mass_frac, tsfr, zred, frac_linear, maxtime
   REAL(SP), DIMENSION(nspec) :: spec_csp
   REAL(SP), DIMENSION(nbands)  :: mags
@@ -72,6 +72,7 @@ SUBROUTINE COMPSP(write_compsp, nzin, outfile,&
   ! We should probably only do this for ages up to tage, if it is set.
   ! Also we will operate on copies of the spectra
 
+  ALLOCATE(spec_ssp(nspec,ntfull,nzin),emlin_ssp(nemline,ntfull,nzin))
   spec_ssp = tspec_ssp
 
   ! Add nebular emission
@@ -111,7 +112,7 @@ SUBROUTINE COMPSP(write_compsp, nzin, outfile,&
      ! ages, which is done using info from `sfhinfo`
      call csp_gen(mass_ssp, lbol_ssp, spec_ssp, &
           pset, age, nzin, mass_csp, lbol_csp, spec_csp,&
-          mdust_csp,emlin_ssp,emlin_csp)
+          mdust_csp,emlin_ssp,emlin_csp,mformed_csp)
 
      call sfhinfo(pset, age, mass_frac, tsfr, frac_linear)
      if (pset%tage.le.0) then
@@ -127,7 +128,7 @@ SUBROUTINE COMPSP(write_compsp, nzin, outfile,&
      endif
      if ((pset%sfh.eq.2).OR.(pset%sfh.eq.3)) then
         ! get mass formed from sum of SSP weights
-        mass_frac = sum(weight_ssp)
+        mass_frac = mformed_csp
      endif
 
      ! -------
@@ -442,13 +443,13 @@ SUBROUTINE COMPSP_HEADER(unit,pset)
        '"; Ratio of BS to HB stars: ",F6.3)') pset%fbhb, pset%sbss
   WRITE(unit,'("#   Shift to TP-AGB [log(Teff),log(Lbol)]: ",F5.2,1x,F5.2)') &
        pset%delt, pset%dell
-  IF (imf_type.EQ.2) THEN
+  IF (pset%imf_type.EQ.2) THEN
      WRITE(unit,'("#   IMF: ",I1,", slopes= ",3F4.1)') &
-          imf_type,pset%imf1,pset%imf2,pset%imf3
-  ELSE IF (imf_type.EQ.3) THEN
-     WRITE(unit,'("#   IMF: ",I1,", cut-off= ",F4.2)') imf_type,pset%vdmc
+          pset%imf_type,pset%imf1,pset%imf2,pset%imf3
+  ELSE IF (pset%imf_type.EQ.3) THEN
+     WRITE(unit,'("#   IMF: ",I1,", cut-off= ",F4.2)') pset%imf_type,pset%vdmc
   ELSE
-     WRITE(unit,'("#   IMF: ",I1)') imf_type
+     WRITE(unit,'("#   IMF: ",I1)') pset%imf_type
   ENDIF
   IF (compute_vega_mags.EQ.1) THEN
      WRITE(unit,'("#   Mag Zero Point: Vega (not relevant for spec/indx files)")')

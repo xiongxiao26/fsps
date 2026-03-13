@@ -54,10 +54,11 @@ MODULE SPS_UTILS
   END INTERFACE
 
   INTERFACE
-     SUBROUTINE ADD_REMNANTS(mass,maxmass)
+     SUBROUTINE ADD_REMNANTS(mass,maxmass,pset)
        USE sps_vars
        REAL(SP), INTENT(inout) :: mass
        REAL(SP), INTENT(in) :: maxmass
+       TYPE(PARAMS), INTENT(in) :: pset
      END SUBROUTINE ADD_REMNANTS
   END INTERFACE
 
@@ -113,14 +114,15 @@ MODULE SPS_UTILS
 
   INTERFACE
      SUBROUTINE CSP_GEN(mass_ssp, lbol_ssp, spec_ssp, pset, tage, nzin,&
-                        mass_csp, lbol_csp, spec_csp, mdust_csp,emlin_ssp,emlin_csp)
+                        mass_csp, lbol_csp, spec_csp, mdust_csp,emlin_ssp,emlin_csp,&
+                        mformed_csp)
        USE sps_vars
        REAL(SP), DIMENSION(ntfull), INTENT(in) :: mass_ssp, lbol_ssp
        REAL(SP), DIMENSION(nspec, ntfull), INTENT(in) :: spec_ssp
        TYPE(PARAMS), intent(in) :: pset
        REAL(SP), INTENT(in)  :: tage
        INTEGER, INTENT(IN) :: nzin
-       REAL(SP), INTENT(out) :: mass_csp, lbol_csp, mdust_csp
+       REAL(SP), INTENT(out) :: mass_csp, lbol_csp, mdust_csp, mformed_csp
        REAL(SP), INTENT(out), DIMENSION(nspec) :: spec_csp
        REAL(SP), DIMENSION(nemline, ntfull, nzin), intent(in) :: emlin_ssp
        REAL(SP), DIMENSION(nemline), intent(out) :: emlin_csp
@@ -128,17 +130,12 @@ MODULE SPS_UTILS
   END INTERFACE
 
   INTERFACE
-     FUNCTION FUNCINT(func,a,b)
+     FUNCTION FUNCINT(a,b,pset,mass_weighted)
        USE sps_vars
        REAL(SP), INTENT(IN) :: a,b
+       TYPE(PARAMS), INTENT(in) :: pset
+       LOGICAL, INTENT(in) :: mass_weighted
        REAL(SP) :: funcint
-       INTERFACE
-          FUNCTION func(x)
-            USE sps_vars
-            REAL(SP), DIMENSION(:), INTENT(IN) :: x
-            REAL(SP), DIMENSION(SIZE(x)) :: func
-          END FUNCTION func
-       END INTERFACE
      END FUNCTION FUNCINT
   END INTERFACE
 
@@ -222,21 +219,31 @@ MODULE SPS_UTILS
   END INTERFACE
 
   INTERFACE
-     FUNCTION IMF(mass)
+     FUNCTION IMF(mass,pset,mass_weighted)
        USE sps_vars
        REAL(SP), DIMENSION(:), INTENT(in) :: mass
+       TYPE(PARAMS), INTENT(in) :: pset
+       LOGICAL, INTENT(in) :: mass_weighted
        REAL(SP), DIMENSION(size(mass)) :: imf
      END FUNCTION IMF
   END INTERFACE 
 
   INTERFACE
-     SUBROUTINE IMF_WEIGHT(mini,wght,nmass)
+     SUBROUTINE IMF_WEIGHT(mini,wght,nmass,pset)
        USE sps_vars
        REAL(SP), INTENT(inout), DIMENSION(nm) :: wght
        REAL(SP), INTENT(in), DIMENSION(nm)    :: mini
        INTEGER, INTENT(in) :: nmass
+       TYPE(PARAMS), INTENT(in) :: pset
      END SUBROUTINE IMF_WEIGHT
-  END INTERFACE 
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PREPARE_IMF(pset)
+       USE sps_vars
+       TYPE(PARAMS), INTENT(inout) :: pset
+     END SUBROUTINE PREPARE_IMF
+  END INTERFACE
 
   INTERFACE
      FUNCTION LINTERP(xin,yin,xout)

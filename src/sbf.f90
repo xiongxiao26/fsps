@@ -15,12 +15,17 @@ SUBROUTINE SBF(pset,outfile)
   REAL(SP), DIMENSION(nspec)  :: tspec,tspec2,spec1,spec2
   REAL(SP), DIMENSION(nbands) :: mags
   REAL(SP), DIMENSION(nm)     :: wght
+  TYPE(PARAMS) :: local_pset
   REAL(SP), DIMENSION(nt,nm)  :: mini,mact,logl,logt,logg,ffco,phase,lmdot
   INTEGER, DIMENSION(nt)      :: nmass
   REAL(SP), DIMENSION(nt)     :: time
 
   !-----------------------------------------------------------!
   !-----------------------------------------------------------!
+
+  ! PREPARE_IMF fills the per-call custom IMF table and bounds.
+  local_pset = pset
+  CALL PREPARE_IMF(local_pset)
 
   !set up the format 
   fmt = '(F7.4,1x,3(F8.4,1x),000(F7.3,1x))'
@@ -51,7 +56,7 @@ SUBROUTINE SBF(pset,outfile)
   DO i=1,nt
 
      !compute IMF-based weights
-     CALL IMF_WEIGHT(mini(i,:),wght,nmass(i))
+     CALL IMF_WEIGHT(mini(i,:),wght,nmass(i),local_pset)
      
      !modify the horizontal branch
      !need the hb weight for the blue stragglers too

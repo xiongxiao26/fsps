@@ -19,19 +19,19 @@ SUBROUTINE SSP_GEN(pset,mass_ssp,lbol_ssp,spec_ssp)
   USE SPS_VARS_MODULE_NAME
   IMPLICIT NONE
 
-  INTEGER :: i=1, j=1, stat,ii,klo,khi !,tlo,thi
+  INTEGER :: i, j, ii,klo,khi !,tlo,thi
   !weight given to the entire horizontal branch
   REAL(SP) :: hb_wght,dt,tco
   !array of IMF weights
   REAL(SP), DIMENSION(nm) :: wght
   !SSP spectrum
   REAL(SP), INTENT(inout), DIMENSION(nspec,ntfull) :: spec_ssp
-  REAL(SP), DIMENSION(nspec,ntfull) :: tspec_ssp
+  REAL(SP), ALLOCATABLE, DIMENSION(:,:) :: tspec_ssp
   !Mass and Lbol info
   REAL(SP), INTENT(inout), DIMENSION(ntfull) :: mass_ssp, lbol_ssp
 
   !temp arrays for the isochrone data
-  REAL(SP), DIMENSION(nt,nm) :: mini,mact,logl,logt,logg,&
+  REAL(SP), ALLOCATABLE, DIMENSION(:,:) :: mini,mact,logl,logt,logg,&
        ffco,phase,lmdot
   !arrays holding the number of mass elements for each
   !isochrone and the age of each isochrone
@@ -41,6 +41,7 @@ SUBROUTINE SSP_GEN(pset,mass_ssp,lbol_ssp,spec_ssp)
   !structure containing all necessary parameters
   !(TYPE objects defined in sps_vars.f90)
   TYPE(PARAMS), INTENT(in) :: pset
+  TYPE(PARAMS) :: local_pset
   !CHARACTER(2) :: istr,istr2
 
   !-----------------------------------------------------------!
@@ -73,43 +74,12 @@ SUBROUTINE SSP_GEN(pset,mass_ssp,lbol_ssp,spec_ssp)
 
   ELSE
 
-     IF (imf_type.NE.0.AND.imf_type.NE.1.AND.imf_type.NE.2.&
-          .AND.imf_type.NE.3.AND.imf_type.NE.4.AND.imf_type.NE.5) THEN
-        WRITE(*,*) 'SSP_GEN ERROR: IMF type outside of range',imf_type
-        STOP
-     ENDIF
+     ! PREPARE_IMF fills the per-call custom IMF table and bounds.
+     local_pset = pset
+     CALL PREPARE_IMF(local_pset)
 
-     !dump IMF parameters into common block
-     imf_alpha(1) = pset%imf1
-     imf_alpha(2) = pset%imf2
-     imf_alpha(3) = pset%imf3
-     imf_vdmc     = pset%vdmc
-     imf_mdave    = pset%mdave
-
-     !read in user-defined IMF (this needs to be done here rather than
-     !in sps_setup because the user can change the IMF without having
-     !to re-run the setup
-     IF (imf_type.EQ.5) THEN
-        IF (TRIM(pset%imf_filename).EQ.'') THEN
-           OPEN(13,FILE=TRIM(SPS_HOME)//'/data/imf.dat',ACTION='READ',STATUS='OLD')
-        ELSE
-           OPEN(13,FILE=TRIM(SPS_HOME)//'/data/'//TRIM(pset%imf_filename),&
-                ACTION='READ',STATUS='OLD')
-        ENDIF
-        DO i=1,100
-           READ(13,*,IOSTAT=stat) imf_user_alpha(1,i),imf_user_alpha(2,i),&
-                imf_user_alpha(3,i)
-           IF (stat.NE.0) GOTO 29
-        ENDDO
-        WRITE(*,*) 'SSP_GEN ERROR: didnt finish reading in the imf file'
-        STOP
-29      CONTINUE
-        CLOSE(13)
-        n_user_imf = i-1
-        !define the upper and lower IMF limits
-        imf_lower_limit = imf_user_alpha(1,1)
-        imf_upper_limit = imf_user_alpha(2,n_user_imf)
-     ENDIF
+     ALLOCATE(mini(nt,nm),mact(nt,nm),logl(nt,nm),logt(nt,nm),logg(nt,nm),&
+          ffco(nt,nm),phase(nt,nm),lmdot(nt,nm))
 
      !transfer isochrones into temporary arrays
      mini  = mini_isoc(pset%zmet,:,:)  !initial mass
@@ -131,13 +101,14 @@ SUBROUTINE SSP_GEN(pset,mass_ssp,lbol_ssp,spec_ssp)
         WRITE(*,'("   Ratio of BS to HB stars  : ",F6.3)') pset%sbss
         WRITE(*,'("   Shift to TP-AGB [log(Teff),log(Lbol)]: ",F5.2,1x,F5.2)') &
              pset%delt, pset%dell
-        IF (imf_type.EQ.2) THEN
+        IF (local_pset%imf_type.EQ.2) THEN
            WRITE(*,'("   IMF: ",I1,", slopes= ",3F4.1)') &
-                imf_type,imf_alpha
-        ELSE IF (imf_type.EQ.3) THEN
-           WRITE(*,'("   IMF: ",I1,", cut-off= ",F4.2)') imf_type,imf_vdmc
+                local_pset%imf_type,local_pset%imf1,local_pset%imf2,local_pset%imf3
+        ELSE IF (local_pset%imf_type.EQ.3) THEN
+           WRITE(*,'("   IMF: ",I1,", cut-off= ",F4.2)') &
+                local_pset%imf_type,local_pset%vdmc
         ELSE
-           WRITE(*,'("   IMF: ",I1)') imf_type
+           WRITE(*,'("   IMF: ",I1)') local_pset%imf_type
         ENDIF
      ENDIF
 
@@ -159,7 +130,7 @@ SUBROUTINE SSP_GEN(pset,mass_ssp,lbol_ssp,spec_ssp)
              WRITE(*,'("age=",F5.2)') time(i)
 
         !compute IMF-based weights
-        CALL IMF_WEIGHT(mini(i,:),wght,nmass(i))
+        CALL IMF_WEIGHT(mini(i,:),wght,nmass(i),local_pset)
 
         !modify the horizontal branch
         !need the hb weight for the blue stragglers too
@@ -183,7 +154,7 @@ SUBROUTINE SSP_GEN(pset,mass_ssp,lbol_ssp,spec_ssp)
 
         !add in remant masses
         IF (add_stellar_remnants.EQ.1) THEN
-           CALL ADD_REMNANTS(mass_ssp(ii),MAXVAL(mini(i,:)))
+           CALL ADD_REMNANTS(mass_ssp(ii),MAXVAL(mini(i,:)),local_pset)
         ENDIF
 
         !compute IMF-weighted bolometric luminosity (actually log(Lbol))
@@ -238,6 +209,7 @@ SUBROUTINE SSP_GEN(pset,mass_ssp,lbol_ssp,spec_ssp)
   !-------------------------------------------------------------!
 
   IF (add_neb_emission.EQ.2) THEN
+     IF (.NOT.ALLOCATED(tspec_ssp)) ALLOCATE(tspec_ssp(nspec,ntfull))
      CALL ADD_NEBULAR(pset,spec_ssp,tspec_ssp)
      spec_ssp = tspec_ssp
   ENDIF
@@ -247,6 +219,7 @@ SUBROUTINE SSP_GEN(pset,mass_ssp,lbol_ssp,spec_ssp)
   !-------------------------------------------------------------!
 
   IF (add_xrb_emission.EQ.1) THEN
+     IF (.NOT.ALLOCATED(tspec_ssp)) ALLOCATE(tspec_ssp(nspec,ntfull))
      CALL ADD_XRB(pset,spec_ssp,tspec_ssp)
      spec_ssp = tspec_ssp
   ENDIF
@@ -264,5 +237,3 @@ SUBROUTINE SSP_GEN(pset,mass_ssp,lbol_ssp,spec_ssp)
 
 
 END SUBROUTINE SSP_GEN
-
-

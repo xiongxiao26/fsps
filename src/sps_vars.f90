@@ -175,7 +175,7 @@ MODULE SPS_VARS_MODULE_NAME
   !3 = van Dokkum 2008 (parameter must be specified in imf_vdmc)
   !4 = Dave 2008 (parameter specified in imf_mdave)
   !5 = user-defined piece-wise power-law, specified in imf.dat
-  INTEGER :: imf_type=2
+  !INTEGER :: imf_type=2
 
   !flag specifying zero-point of magnitudes
   !0 = AB system
@@ -380,20 +380,20 @@ MODULE SPS_VARS_MODULE_NAME
   !the user does not set these vars explicitly.  They
   !are set in the PARAMS structure below and are
   !copied internally
-  REAL(SP), DIMENSION(3) :: imf_alpha=1.3
+  !REAL(SP), DIMENSION(3) :: imf_alpha=1.3
   !IMF cut-off for van Dokkum parameterization
   !the user does not set this var explicitly.  It
   !is set in the PARAMS structure below and
   !copied internally
-  REAL(SP) :: imf_vdmc  = 0.08
+  !REAL(SP) :: imf_vdmc  = 0.08
   !IMF transition mass for Dave parameterization
   !the user does not set this var explicitly.  It
   !is set in the PARAMS structure below and
   !copied internally
-  REAL(SP) :: imf_mdave = 0.5
+  !REAL(SP) :: imf_mdave = 0.5
   !parameters for user-defined IMF
-  INTEGER :: n_user_imf = 0
-  REAL(SP), DIMENSION(3,100) :: imf_user_alpha=0.
+  !INTEGER :: n_user_imf = 0
+  !REAL(SP), DIMENSION(3,100) :: imf_user_alpha=0.
 
   !environment variable for SPS home directory
   CHARACTER(250) :: SPS_HOME=''
@@ -536,10 +536,10 @@ MODULE SPS_VARS_MODULE_NAME
   REAL(SP), DIMENSION(ntfull)          :: time_full=0.
 
   !array for ssp weights
-  REAL(SP), DIMENSION(ntfull,nz)       :: weight_ssp=0.
+  !REAL(SP), DIMENSION(ntfull,nz)       :: weight_ssp=0.
 
   !array for young and old ages
-  REAL(SP), DIMENSION(nspec) :: spec_young=0.,spec_old=0.
+  !REAL(SP), DIMENSION(nspec) :: spec_young=0.,spec_old=0.
 
   !array for full BPASS SSPs
   REAL(SP), DIMENSION(nspec,nt,nz) :: bpass_spec_ssp=0.
@@ -558,19 +558,22 @@ MODULE SPS_VARS_MODULE_NAME
      REAL(SP) :: pagb=1.0,dell=0.,delt=0.,fbhb=0.,sbss=0.,tau=1.0,&
           const=0.,tage=0.,fburst=0.,tburst=11.0,dust1=0.,dust2=0.,&
           logzsol=0.,zred=0.,pmetals=0.02,imf1=1.3,imf2=2.3,imf3=2.3,&
-          vdmc=0.08,dust_clumps=-99.,frac_nodust=0.,dust_index=-0.7,&
-          dust_tesc=7.0,frac_obrun=0.,uvb=1.0,mwr=3.1,redgb=1.0,agb=1.0,&
-          dust1_index=-1.0,mdave=0.5,sf_start=0.,sf_trunc=0.,sf_slope=0.,&
-          duste_gamma=0.01,duste_umin=1.0,duste_qpah=3.5,fcstar=1.0,&
-          masscut=150.0,sigma_smooth=0.,agb_dust=1.0,min_wave_smooth=1E3,&
+          vdmc=0.08,imf_lower_limit=0.08,imf_upper_limit=120.,&
+          dust_clumps=-99.,frac_nodust=0.,dust_index=-0.7,dust_tesc=7.0,&
+          frac_obrun=0.,uvb=1.0,mwr=3.1,redgb=1.0,agb=1.0,dust1_index=-1.0,&
+          mdave=0.5,sf_start=0.,sf_trunc=0.,sf_slope=0.,duste_gamma=0.01,&
+          duste_umin=1.0,duste_qpah=3.5,fcstar=1.0,masscut=150.0,&
+          sigma_smooth=0.,agb_dust=1.0,min_wave_smooth=1E3,&
           max_wave_smooth=1E4,gas_logu=-2.0,gas_logz=0.,igm_factor=1.0,&
           fagn=0.0,agn_tau=10.0,frac_xrb=1.0,dust3=0.
-     INTEGER :: zmet=1,sfh=0,wgp1=1,wgp2=1,wgp3=1,evtype=-1
+     INTEGER :: zmet=1,imf_type=2,sfh=0,wgp1=1,wgp2=1,wgp3=1,evtype=-1
      INTEGER, DIMENSION(nbands) :: mag_compute=1
      INTEGER, DIMENSION(nt) :: ssp_gen_age=1
      CHARACTER(50) :: imf_filename='', sfh_filename=''
      REAL(SP), DIMENSION(3,ntabmax) :: sfh_tab=0.
      INTEGER :: ntabsfh=0
+     REAL(SP), DIMENSION(3,100) :: imf_user_alpha=0.
+     INTEGER :: n_user_imf=0
   END TYPE PARAMS
 
   !structure for the output of the compsp routine

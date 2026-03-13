@@ -20,7 +20,7 @@ SUBROUTINE MOD_HB(f_bhb,t,mini,mact,logl,logt,logg,phase, &
   REAL(SP), INTENT(inout), DIMENSION(nt,nm) :: mini,mact,&
        logl,logt,logg,phase
   REAL(SP), INTENT(inout), DIMENSION(nm) :: wght
-  REAL(SP), DIMENSION(nm) :: tphase=0.0
+  REAL(SP), DIMENSION(nm) :: tphase
   INTEGER, INTENT(inout), DIMENSION(nt) :: nmass
   REAL(SP), INTENT(inout) :: hb_wght
   INTEGER, INTENT(in) :: t
@@ -29,16 +29,19 @@ SUBROUTINE MOD_HB(f_bhb,t,mini,mact,logl,logt,logg,phase, &
   !number of blue HB to add per HB star
   !(not important b/c their total weight remains fixed)
   INTEGER, PARAMETER :: nhb=10
-  INTEGER :: j, i, flip=0, tnhb
-  REAL(SP) :: tgrad=0., hblum=-999.,minteff=1E6
-  REAL(SP), DIMENSION(nhb) :: dumarr=0.
+  INTEGER :: j, i, flip, tnhb
+  REAL(SP) :: tgrad, hblum, minteff
+  REAL(SP), DIMENSION(nhb) :: dumarr
 
   !---------------------------------------------------------------!
   !---------------------------------------------------------------!
 
+  tgrad   = 0.0
   hblum   = -999.
   flip    = 0
   hb_wght = 0.
+  minteff = 1E6
+  dumarr  = 0.0
   tphase  = phase(t,:)
 
   !we need to count the total number of HB stars in 

@@ -40,12 +40,14 @@ SUBROUTINE ADD_DUST(pset,csp1,csp2,specdust,mdust,ncsp1,ncsp2,nebdust)
   REAL(SP), INTENT(out) :: mdust
   REAL(SP), DIMENSION(nemline), INTENT(in) :: ncsp1,ncsp2
   REAL(SP), DIMENSION(nemline), INTENT(out) :: nebdust
-  INTEGER :: i,qlo,ulo,iself=0
+  INTEGER :: i,qlo,ulo,iself
   REAL(SP), DIMENSION(nspec)  :: diff_dust,tau_diff,cspi
   REAL(SP), DIMENSION(nemline)  :: diff_dust_neb,ncspi
   REAL(SP), DIMENSION(nspec)  :: nu,dumin,dumax
   REAL(SP), DIMENSION(nspec)  :: mduste,duste,oduste,sduste,tduste
   REAL(SP) :: clump_ave,lboln,lbold,labs,gamma,norm,dq,du
+
+  iself = 0
 
   !---------------------------------------------------------------!
   !----------------------Test input params------------------------!

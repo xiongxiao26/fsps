@@ -1,6 +1,6 @@
 subroutine csp_gen(mass_ssp, lbol_ssp, spec_ssp, &
      pset, tage, nzin, mass_csp, lbol_csp, spec_csp, &
-     mdust_csp,emlin_ssp,emlin_csp)!,total_weights,spec_young,spec_old)
+     mdust_csp,emlin_ssp,emlin_csp,mformed_csp)
   !
   ! Return the spectrum (and mass and lbol) of a composite stellar population.
   !
@@ -31,13 +31,12 @@ subroutine csp_gen(mass_ssp, lbol_ssp, spec_ssp, &
   ! emlin_csp:
   !   The emission line luminosities for the CSP
   !
-  ! total_weights:
-  !    The weights(masses) for each SSP in the composite
+  ! mformed_csp:
+  !   The total SSP weight, i.e. the stellar mass formed in the CSP.
 
   use SPS_VARS_MODULE_NAME, only: ntfull, nspec, time_full, tiny_number, tiny_logt, &
                       zlegend, nz, compute_light_ages, &
-                      SFHPARAMS, PARAMS, SP, nemline, dust_type, &
-                      weight_ssp, spec_young, spec_old
+                      SFHPARAMS, PARAMS, SP, nemline, dust_type
   implicit none
 
   real(SP), intent(in), dimension(ntfull, nzin) :: mass_ssp, lbol_ssp
@@ -47,18 +46,16 @@ subroutine csp_gen(mass_ssp, lbol_ssp, spec_ssp, &
   integer, intent(in) :: nzin
 
   real(SP), intent(out) :: mass_csp, lbol_csp, mdust_csp
+  real(SP), intent(out) :: mformed_csp
   real(SP), intent(out), dimension(nspec) :: spec_csp
 
   real(SP), DIMENSION(nemline, ntfull, nzin), intent(in) :: emlin_ssp
   real(SP), DIMENSION(nemline), intent(out) :: emlin_csp
 
-  !real(SP), intent(out), dimension(ntfull, nzin) :: total_weights
-  !real(SP), intent(out), dimension(nspec) :: spec_young,spec_old
-
-  real(SP), dimension(nspec) :: lw_age, temp_spec !,csp1, csp2
+  real(SP), dimension(nspec) :: lw_age, temp_spec, spec_young, spec_old
   real(SP), dimension(nemline) :: ncsp1, ncsp2, nlw_age, temp_lin
   real(SP), dimension(ntfull, nzin) :: total_weights
-  real(SP), dimension(ntfull) :: w1=0., w2=0.
+  real(SP), dimension(ntfull) :: w1, w2
   integer :: i, j, k, imin, imax, i_tesc
   type(SFHPARAMS) :: sfhpars
   real(SP) :: m1, m2, frac_linear, mfrac, sfr, fburst
@@ -79,7 +76,8 @@ subroutine csp_gen(mass_ssp, lbol_ssp, spec_ssp, &
   ! ----- Get SFH weights -----
 
   total_weights = 0.
-  weight_ssp = 0.
+  w1 = 0.
+  w2 = 0.
 
   ! SSP.
   if (pset%sfh.eq.0) then
@@ -251,7 +249,6 @@ subroutine csp_gen(mass_ssp, lbol_ssp, spec_ssp, &
   do i=max(imin, 1), imax
      do k=1,nzin
         if (total_weights(i, k).gt.tiny_number) then
-           weight_ssp(i, k) = total_weights(i, k)  ! copy to common variable
            temp_spec = max(total_weights(i, k) * spec_ssp(:, i, k), tiny_number)
            temp_lin = max(total_weights(i, k) * emlin_ssp(:, i, k), tiny_number)
            if (i.le.i_tesc) then
@@ -277,11 +274,13 @@ subroutine csp_gen(mass_ssp, lbol_ssp, spec_ssp, &
   enddo
   mass_csp = sum(mass_ssp * total_weights)
   lbol_csp = log10(sum(10**lbol_ssp * total_weights))
+  mformed_csp = sum(total_weights)
 
   ! Here we add young and old spectra with dust.
   if (((pset%dust1.gt.tiny_number).or.(pset%dust2.gt.tiny_number).or.(dust_type.eq.3))&
        .and.(compute_light_ages.eq.0)) then
-     call add_dust(pset, spec_young, spec_old, spec_csp, mdust_csp, ncsp1, ncsp2, emlin_csp)
+     call add_dust(pset, spec_young, spec_old, spec_csp, mdust_csp,&
+          ncsp1, ncsp2, emlin_csp)
 
   else
      spec_csp  = spec_young + spec_old

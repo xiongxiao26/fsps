@@ -34,29 +34,24 @@ END FUNCTION MYARTH
 !---------------------------------------------------------------!
 !---------------------------------------------------------------!
 
-SUBROUTINE MYTRAPZD(func,a,b,s,n)
+SUBROUTINE MYTRAPZD(a,b,s,n,pset,mass_weighted)
 
   USE SPS_VARS_MODULE_NAME
   IMPLICIT NONE
   REAL(SP), INTENT(IN) :: a,b
   REAL(SP), INTENT(INOUT) :: s
   INTEGER, INTENT(IN) :: n
-  INTERFACE
-     FUNCTION func(x)
-       USE SPS_VARS_MODULE_NAME
-       REAL(SP), DIMENSION(:), INTENT(IN) :: x
-       REAL(SP), DIMENSION(SIZE(x)) :: func
-     END FUNCTION func
-  END INTERFACE
+  TYPE(PARAMS), INTENT(in) :: pset
+  LOGICAL, INTENT(in) :: mass_weighted
   REAL(SP) :: del,fsum
   INTEGER :: it
 
   IF (n == 1) THEN
-     s=0.5*(b-a)*SUM(func( (/ a,b /) ))
+     s=0.5*(b-a)*SUM(IMF((/ a,b /),pset,mass_weighted))
   ELSE
      it=2**(n-2)
      del=(b-a)/it
-     fsum=SUM(func(myarth(a+0.5*del,del,it)))
+     fsum=SUM(IMF(myarth(a+0.5*del,del,it),pset,mass_weighted))
      s=0.5*(s+del*fsum)
   ENDIF
 
@@ -106,19 +101,14 @@ END SUBROUTINE MYPOLINT
 !---------------------------------------------------------------!
 !---------------------------------------------------------------!
 
-FUNCTION FUNCINT(func,a,b)
+FUNCTION FUNCINT(a,b,pset,mass_weighted)
 
   USE SPS_VARS_MODULE_NAME
   IMPLICIT NONE
   REAL(SP), INTENT(IN) :: a,b
+  TYPE(PARAMS), INTENT(in) :: pset
+  LOGICAL, INTENT(in) :: mass_weighted
   REAL(SP) :: funcint
-  INTERFACE
-     FUNCTION func(x)
-       USE SPS_VARS_MODULE_NAME
-       REAL(SP), DIMENSION(:), INTENT(IN) :: x
-       REAL(SP), DIMENSION(size(x)) :: func
-     END FUNCTION func
-  END INTERFACE
   INTEGER, PARAMETER :: JMAX=20,JMAXP=JMAX+1,K=5,KM=K-1
   REAL(SP), PARAMETER :: EPS=1.0e-7
   REAL(SP), DIMENSION(JMAXP) :: h,s
@@ -127,7 +117,7 @@ FUNCTION FUNCINT(func,a,b)
 
   h(1)=1.0
   DO j=1,JMAX
-     CALL mytrapzd(func,a,b,s(j),j)
+     CALL mytrapzd(a,b,s(j),j,pset,mass_weighted)
      IF (j >= K) THEN
         CALL mypolint(h(j-KM:j),s(j-KM:j),zero,funcint,dqromb)
         IF (abs(dqromb) <= EPS*ABS(funcint)) RETURN
@@ -139,5 +129,3 @@ FUNCTION FUNCINT(func,a,b)
   WRITE(*,*) 'FUNCINT ERROR:',a,b
 
 END FUNCTION FUNCINT
-
-
