@@ -34,7 +34,7 @@ END FUNCTION MYARTH
 !---------------------------------------------------------------!
 !---------------------------------------------------------------!
 
-SUBROUTINE MYTRAPZD(a,b,s,n,pset,mass_weighted)
+SUBROUTINE MYTRAPZD(a,b,s,n,pset,imf_state,mass_weighted)
 
   USE SPS_VARS_MODULE_NAME
   IMPLICIT NONE
@@ -42,16 +42,17 @@ SUBROUTINE MYTRAPZD(a,b,s,n,pset,mass_weighted)
   REAL(SP), INTENT(INOUT) :: s
   INTEGER, INTENT(IN) :: n
   TYPE(PARAMS), INTENT(in) :: pset
+  TYPE(IMF_RUNTIME), INTENT(in) :: imf_state
   LOGICAL, INTENT(in) :: mass_weighted
   REAL(SP) :: del,fsum
   INTEGER :: it
 
   IF (n == 1) THEN
-     s=0.5*(b-a)*SUM(IMF((/ a,b /),pset,mass_weighted))
+     s=0.5*(b-a)*SUM(IMF((/ a,b /),pset,imf_state,mass_weighted))
   ELSE
      it=2**(n-2)
      del=(b-a)/it
-     fsum=SUM(IMF(myarth(a+0.5*del,del,it),pset,mass_weighted))
+     fsum=SUM(IMF(myarth(a+0.5*del,del,it),pset,imf_state,mass_weighted))
      s=0.5*(s+del*fsum)
   ENDIF
 
@@ -101,12 +102,13 @@ END SUBROUTINE MYPOLINT
 !---------------------------------------------------------------!
 !---------------------------------------------------------------!
 
-FUNCTION FUNCINT(a,b,pset,mass_weighted)
+FUNCTION FUNCINT(a,b,pset,imf_state,mass_weighted)
 
   USE SPS_VARS_MODULE_NAME
   IMPLICIT NONE
   REAL(SP), INTENT(IN) :: a,b
   TYPE(PARAMS), INTENT(in) :: pset
+  TYPE(IMF_RUNTIME), INTENT(in) :: imf_state
   LOGICAL, INTENT(in) :: mass_weighted
   REAL(SP) :: funcint
   INTEGER, PARAMETER :: JMAX=20,JMAXP=JMAX+1,K=5,KM=K-1
@@ -117,7 +119,7 @@ FUNCTION FUNCINT(a,b,pset,mass_weighted)
 
   h(1)=1.0
   DO j=1,JMAX
-     CALL mytrapzd(a,b,s(j),j,pset,mass_weighted)
+     CALL mytrapzd(a,b,s(j),j,pset,imf_state,mass_weighted)
      IF (j >= K) THEN
         CALL mypolint(h(j-KM:j),s(j-KM:j),zero,funcint,dqromb)
         IF (abs(dqromb) <= EPS*ABS(funcint)) RETURN

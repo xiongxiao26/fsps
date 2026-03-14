@@ -4,6 +4,7 @@ SUBROUTINE COMPSP(write_compsp, nzin, outfile,&
   !
   !
   !N.B. variables not otherwise defined come from sps_vars.f90
+  use, intrinsic :: iso_c_binding, only: c_associated, c_f_pointer
   use SPS_VARS_MODULE_NAME
 
   implicit none
@@ -24,6 +25,7 @@ SUBROUTINE COMPSP(write_compsp, nzin, outfile,&
   REAL(SP), DIMENSION(nspec) :: spec_csp
   REAL(SP), DIMENSION(nbands)  :: mags
   REAL(SP), DIMENSION(nindx)   :: indx
+  REAL(SP), POINTER :: sfh_tab(:,:)
   INTEGER :: i, nage
 
   ! ------ Various checks and setup ------
@@ -100,7 +102,12 @@ SUBROUTINE COMPSP(write_compsp, nzin, outfile,&
         age = pset%tage
      else if ((pset%tage.eq.-99).and.((pset%sfh.eq.2).or.(pset%sfh.eq.3))) then
         ! Special switch to just do the last time in the tabular file
-        age = maxval(pset%sfh_tab(1, 1:pset%ntabsfh)) / 1E9
+        if ((pset%ntabsfh.eq.0).or.(.not.c_associated(pset%sfh_tab))) then
+           write(*,*) 'COMPSP ERROR: tabular SFH requested but pset%sfh_tab is not initialized'
+           STOP
+        endif
+        call c_f_pointer(pset%sfh_tab, sfh_tab, [3, pset%ntabsfh])
+        age = maxval(sfh_tab(1, 1:pset%ntabsfh)) / 1E9
      else
         ! Otherwise we will calculate composite spectra for every SSP age.
         age = 10**(time_full(i)-9.)

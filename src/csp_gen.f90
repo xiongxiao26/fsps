@@ -34,6 +34,7 @@ subroutine csp_gen(mass_ssp, lbol_ssp, spec_ssp, &
   ! mformed_csp:
   !   The total SSP weight, i.e. the stellar mass formed in the CSP.
 
+  use, intrinsic :: iso_c_binding, only: c_associated, c_f_pointer
   use SPS_VARS_MODULE_NAME, only: ntfull, nspec, time_full, tiny_number, tiny_logt, &
                       zlegend, nz, compute_light_ages, &
                       SFHPARAMS, PARAMS, SP, nemline, dust_type
@@ -54,6 +55,7 @@ subroutine csp_gen(mass_ssp, lbol_ssp, spec_ssp, &
 
   real(SP), dimension(nspec) :: lw_age, temp_spec, spec_young, spec_old
   real(SP), dimension(nemline) :: ncsp1, ncsp2, nlw_age, temp_lin
+  real(SP), pointer :: sfh_tab(:,:)
   real(SP), dimension(ntfull, nzin) :: total_weights
   real(SP), dimension(ntfull) :: w1, w2
   integer :: i, j, k, imin, imax, i_tesc
@@ -168,6 +170,11 @@ subroutine csp_gen(mass_ssp, lbol_ssp, spec_ssp, &
   ! since big bang (forward time).  We are going to treat this as a sum of
   ! linear SFHs, one for each bin in the table
   if (pset%sfh.eq.2.or.pset%sfh.eq.3) then
+     if ((pset%ntabsfh.eq.0).or.(.not.c_associated(pset%sfh_tab))) then
+        write(*,*) 'CSP_GEN ERROR: tabular SFH requested but pset%sfh_tab is not initialized'
+        STOP
+     endif
+     call c_f_pointer(pset%sfh_tab, sfh_tab, [3, pset%ntabsfh])
      total_weights = 0.
 
      ! Assume linear SFH within the bins
@@ -177,17 +184,17 @@ subroutine csp_gen(mass_ssp, lbol_ssp, spec_ssp, &
         ! Edges of the bin in lookback time. Note that the order of sfhtab gets
         ! flipped, since it is given in forward time and then we convert to
         ! lookback time.  So j=0 is the `oldest` in terms of lookback time
-        t1 = tage*1e9 - pset%sfh_tab(1, j+1)
-        t2 = tage*1e9 - pset%sfh_tab(1, j)
+        t1 = tage*1e9 - sfh_tab(1, j+1)
+        t2 = tage*1e9 - sfh_tab(1, j)
         if (t2.lt.0) then
            ! Entire bin is in the future, skip
            cycle
         endif
         ! Metallicity of the bin. Just a straight average.
-        zbin = (pset%sfh_tab(3, j) + pset%sfh_tab(3, j+1)) / 2
+        zbin = (sfh_tab(3, j) + sfh_tab(3, j+1)) / 2
 
         ! Linear slope.  Positive should be sfr *decreasing* in time since big bang.
-        sfhpars%sf_slope = -(pset%sfh_tab(2, j+1) - pset%sfh_tab(2, j)) / (t2 - t1) / pset%sfh_tab(2, j+1)
+        sfhpars%sf_slope = -(sfh_tab(2, j+1) - sfh_tab(2, j)) / (t2 - t1) / sfh_tab(2, j+1)
         ! Set integration limits using bin edges clipped to valid times.
         ! That is, don't include any portion of a bin that goes to negative
         ! time, or beyond the oldest isochrone.
@@ -196,7 +203,7 @@ subroutine csp_gen(mass_ssp, lbol_ssp, spec_ssp, &
         sfhpars%sf_trunc = sfhpars%tage - sfhpars%tq
         ! Mass that formed within these valid times.
         dt = (sfhpars%tage - sfhpars%tq)
-        m2 = pset%sfh_tab(2, j+1) * (1 + sfhpars%sf_slope/2. * (sfhpars%tage + sfhpars%tq - 2*t1)) * dt
+        m2 = sfh_tab(2, j+1) * (1 + sfhpars%sf_slope/2. * (sfhpars%tage + sfhpars%tq - 2*t1)) * dt
         ! min and max ssps to consider, being conservative.
         imin = min(max(locate(time_full, log10(t1)) - 1, 0), ntfull)
         imax = min(max(locate(time_full, log10(t2)) + 2, 0), ntfull)

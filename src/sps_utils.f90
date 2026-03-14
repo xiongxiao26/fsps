@@ -54,11 +54,12 @@ MODULE SPS_UTILS
   END INTERFACE
 
   INTERFACE
-     SUBROUTINE ADD_REMNANTS(mass,maxmass,pset)
+     SUBROUTINE ADD_REMNANTS(mass,maxmass,pset,imf_state)
        USE sps_vars
        REAL(SP), INTENT(inout) :: mass
        REAL(SP), INTENT(in) :: maxmass
        TYPE(PARAMS), INTENT(in) :: pset
+       TYPE(IMF_RUNTIME), INTENT(in) :: imf_state
      END SUBROUTINE ADD_REMNANTS
   END INTERFACE
 
@@ -130,10 +131,11 @@ MODULE SPS_UTILS
   END INTERFACE
 
   INTERFACE
-     FUNCTION FUNCINT(a,b,pset,mass_weighted)
+     FUNCTION FUNCINT(a,b,pset,imf_state,mass_weighted)
        USE sps_vars
        REAL(SP), INTENT(IN) :: a,b
        TYPE(PARAMS), INTENT(in) :: pset
+       TYPE(IMF_RUNTIME), INTENT(in) :: imf_state
        LOGICAL, INTENT(in) :: mass_weighted
        REAL(SP) :: funcint
      END FUNCTION FUNCINT
@@ -219,29 +221,32 @@ MODULE SPS_UTILS
   END INTERFACE
 
   INTERFACE
-     FUNCTION IMF(mass,pset,mass_weighted)
+     FUNCTION IMF(mass,pset,imf_state,mass_weighted)
        USE sps_vars
        REAL(SP), DIMENSION(:), INTENT(in) :: mass
        TYPE(PARAMS), INTENT(in) :: pset
+       TYPE(IMF_RUNTIME), INTENT(in) :: imf_state
        LOGICAL, INTENT(in) :: mass_weighted
        REAL(SP), DIMENSION(size(mass)) :: imf
      END FUNCTION IMF
   END INTERFACE 
 
   INTERFACE
-     SUBROUTINE IMF_WEIGHT(mini,wght,nmass,pset)
+     SUBROUTINE IMF_WEIGHT(mini,wght,nmass,pset,imf_state)
        USE sps_vars
        REAL(SP), INTENT(inout), DIMENSION(nm) :: wght
        REAL(SP), INTENT(in), DIMENSION(nm)    :: mini
        INTEGER, INTENT(in) :: nmass
        TYPE(PARAMS), INTENT(in) :: pset
+       TYPE(IMF_RUNTIME), INTENT(in) :: imf_state
      END SUBROUTINE IMF_WEIGHT
   END INTERFACE
 
   INTERFACE
-     SUBROUTINE PREPARE_IMF(pset)
+     SUBROUTINE PREPARE_IMF(pset,imf_state)
        USE sps_vars
-       TYPE(PARAMS), INTENT(inout) :: pset
+       TYPE(PARAMS), INTENT(in) :: pset
+       TYPE(IMF_RUNTIME), INTENT(out) :: imf_state
      END SUBROUTINE PREPARE_IMF
   END INTERFACE
 
@@ -311,7 +316,7 @@ MODULE SPS_UTILS
   INTERFACE
      SUBROUTINE SETUP_TABULAR_SFH(pset, nzin)
        USE sps_vars
-       TYPE(PARAMS), INTENT(in) :: pset
+       TYPE(PARAMS), INTENT(inout) :: pset
        INTEGER, INTENT(in) :: nzin
      END SUBROUTINE SETUP_TABULAR_SFH
   END INTERFACE

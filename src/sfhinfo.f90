@@ -27,6 +27,7 @@ subroutine sfhinfo(pset, age, mfrac, sfr, frac_linear)
   !   If pset%sfh=5, this gives the fraction of m_formed(age) that was formed
   !   in the linear portion.
   !
+  use, intrinsic :: iso_c_binding, only: c_associated, c_f_pointer
   use SPS_VARS_MODULE_NAME, only: time_full, ntfull, tiny_number, &
                       PARAMS, SP
   implicit none
@@ -36,6 +37,7 @@ subroutine sfhinfo(pset, age, mfrac, sfr, frac_linear)
 
   real(SP), intent(out) :: mfrac, sfr, frac_linear
 
+  real(SP), pointer :: sfh_tab(:,:)
   real(SP) :: Tmax, Tprime, Tz, Ttrunc, Thi
   real(SP) :: m
   real(SP) :: mass_tau, mass_linear, mfrac_burst
@@ -174,9 +176,14 @@ subroutine sfhinfo(pset, age, mfrac, sfr, frac_linear)
   ! Tabular.  Simple linear interpolation to get the sfr.
   ! The table is in units of yrs of forward time and M_sun/yr.
   if ((pset%sfh.eq.2).or.(pset%sfh.eq.3)) then
-     itab = max(min(locate(pset%sfh_tab(1, 1:pset%ntabsfh), age*1e9), pset%ntabsfh-1), 1)
-     m = (pset%sfh_tab(2, itab+1) - pset%sfh_tab(2, itab)) / (pset%sfh_tab(1, itab+1) - pset%sfh_tab(1, itab))
-     sfr = pset%sfh_tab(2, itab) + m * (age*1e9 - pset%sfh_tab(1, itab))
+     if ((pset%ntabsfh.eq.0).or.(.not.c_associated(pset%sfh_tab))) then
+        write(*,*) 'SFHINFO ERROR: tabular SFH requested but pset%sfh_tab is not initialized'
+        STOP
+     endif
+     call c_f_pointer(pset%sfh_tab, sfh_tab, [3, pset%ntabsfh])
+     itab = max(min(locate(sfh_tab(1, 1:pset%ntabsfh), age*1e9), pset%ntabsfh-1), 1)
+     m = (sfh_tab(2, itab+1) - sfh_tab(2, itab)) / (sfh_tab(1, itab+1) - sfh_tab(1, itab))
+     sfr = sfh_tab(2, itab) + m * (age*1e9 - sfh_tab(1, itab))
      sfr = max(sfr, 0.0) * 1e9 ! convert to per Gyr
   endif
 

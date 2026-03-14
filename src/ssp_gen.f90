@@ -41,7 +41,7 @@ SUBROUTINE SSP_GEN(pset,mass_ssp,lbol_ssp,spec_ssp)
   !structure containing all necessary parameters
   !(TYPE objects defined in sps_vars.f90)
   TYPE(PARAMS), INTENT(in) :: pset
-  TYPE(PARAMS) :: local_pset
+  TYPE(IMF_RUNTIME) :: imf_state
   !CHARACTER(2) :: istr,istr2
 
   !-----------------------------------------------------------!
@@ -75,8 +75,7 @@ SUBROUTINE SSP_GEN(pset,mass_ssp,lbol_ssp,spec_ssp)
   ELSE
 
      ! PREPARE_IMF fills the per-call custom IMF table and bounds.
-     local_pset = pset
-     CALL PREPARE_IMF(local_pset)
+     CALL PREPARE_IMF(pset,imf_state)
 
      ALLOCATE(mini(nt,nm),mact(nt,nm),logl(nt,nm),logt(nt,nm),logg(nt,nm),&
           ffco(nt,nm),phase(nt,nm),lmdot(nt,nm))
@@ -101,14 +100,14 @@ SUBROUTINE SSP_GEN(pset,mass_ssp,lbol_ssp,spec_ssp)
         WRITE(*,'("   Ratio of BS to HB stars  : ",F6.3)') pset%sbss
         WRITE(*,'("   Shift to TP-AGB [log(Teff),log(Lbol)]: ",F5.2,1x,F5.2)') &
              pset%delt, pset%dell
-        IF (local_pset%imf_type.EQ.2) THEN
+        IF (pset%imf_type.EQ.2) THEN
            WRITE(*,'("   IMF: ",I1,", slopes= ",3F4.1)') &
-                local_pset%imf_type,local_pset%imf1,local_pset%imf2,local_pset%imf3
-        ELSE IF (local_pset%imf_type.EQ.3) THEN
+                pset%imf_type,pset%imf1,pset%imf2,pset%imf3
+        ELSE IF (pset%imf_type.EQ.3) THEN
            WRITE(*,'("   IMF: ",I1,", cut-off= ",F4.2)') &
-                local_pset%imf_type,local_pset%vdmc
+                pset%imf_type,pset%vdmc
         ELSE
-           WRITE(*,'("   IMF: ",I1)') local_pset%imf_type
+           WRITE(*,'("   IMF: ",I1)') pset%imf_type
         ENDIF
      ENDIF
 
@@ -130,7 +129,7 @@ SUBROUTINE SSP_GEN(pset,mass_ssp,lbol_ssp,spec_ssp)
              WRITE(*,'("age=",F5.2)') time(i)
 
         !compute IMF-based weights
-        CALL IMF_WEIGHT(mini(i,:),wght,nmass(i),local_pset)
+        CALL IMF_WEIGHT(mini(i,:),wght,nmass(i),pset,imf_state)
 
         !modify the horizontal branch
         !need the hb weight for the blue stragglers too
@@ -154,7 +153,7 @@ SUBROUTINE SSP_GEN(pset,mass_ssp,lbol_ssp,spec_ssp)
 
         !add in remant masses
         IF (add_stellar_remnants.EQ.1) THEN
-           CALL ADD_REMNANTS(mass_ssp(ii),MAXVAL(mini(i,:)),local_pset)
+           CALL ADD_REMNANTS(mass_ssp(ii),MAXVAL(mini(i,:)),pset,imf_state)
         ENDIF
 
         !compute IMF-weighted bolometric luminosity (actually log(Lbol))

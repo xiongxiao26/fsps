@@ -2,6 +2,7 @@ MODULE SPS_VARS_MODULE_NAME
 
   ! module to set up most arrays and variables
 
+  USE, INTRINSIC :: iso_c_binding, ONLY: c_ptr, c_null_ptr
   IMPLICIT NONE
   SAVE
 
@@ -550,6 +551,7 @@ MODULE SPS_VARS_MODULE_NAME
   REAL(SP), DIMENSION(nspec,nt_xrb,nz_xrb) :: spec_xrb=0.
   REAL(SP), DIMENSION(nt_xrb) :: ages_xrb=0.0
   REAL(SP), DIMENSION(nz_xrb) :: zmet_xrb=0.0
+  REAL(SP), ALLOCATABLE, TARGET :: sfh_tab_file_buffer(:,:)
   
   !------------Define TYPE structures-------------!
 
@@ -558,8 +560,7 @@ MODULE SPS_VARS_MODULE_NAME
      REAL(SP) :: pagb=1.0,dell=0.,delt=0.,fbhb=0.,sbss=0.,tau=1.0,&
           const=0.,tage=0.,fburst=0.,tburst=11.0,dust1=0.,dust2=0.,&
           logzsol=0.,zred=0.,pmetals=0.02,imf1=1.3,imf2=2.3,imf3=2.3,&
-          vdmc=0.08,imf_lower_limit=0.08,imf_upper_limit=120.,&
-          dust_clumps=-99.,frac_nodust=0.,dust_index=-0.7,dust_tesc=7.0,&
+          vdmc=0.08,dust_clumps=-99.,frac_nodust=0.,dust_index=-0.7,dust_tesc=7.0,&
           frac_obrun=0.,uvb=1.0,mwr=3.1,redgb=1.0,agb=1.0,dust1_index=-1.0,&
           mdave=0.5,sf_start=0.,sf_trunc=0.,sf_slope=0.,duste_gamma=0.01,&
           duste_umin=1.0,duste_qpah=3.5,fcstar=1.0,masscut=150.0,&
@@ -570,11 +571,15 @@ MODULE SPS_VARS_MODULE_NAME
      INTEGER, DIMENSION(nbands) :: mag_compute=1
      INTEGER, DIMENSION(nt) :: ssp_gen_age=1
      CHARACTER(50) :: imf_filename='', sfh_filename=''
-     REAL(SP), DIMENSION(3,ntabmax) :: sfh_tab=0.
+     TYPE(c_ptr) :: sfh_tab=c_null_ptr
      INTEGER :: ntabsfh=0
-     REAL(SP), DIMENSION(3,100) :: imf_user_alpha=0.
-     INTEGER :: n_user_imf=0
   END TYPE PARAMS
+
+  TYPE IMF_RUNTIME
+     REAL(SP), ALLOCATABLE, DIMENSION(:,:) :: user_alpha
+     INTEGER :: n_user_imf=0
+     REAL(SP) :: lower_limit=0.08, upper_limit=120.
+  END TYPE IMF_RUNTIME
 
   !structure for the output of the compsp routine
   TYPE COMPSPOUT

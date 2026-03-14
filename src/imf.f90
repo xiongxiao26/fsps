@@ -1,4 +1,4 @@
-FUNCTION IMF(mass,pset,mass_weighted)
+FUNCTION IMF(mass,pset,imf_state,mass_weighted)
 
   !define IMFs (dn/dM)
 
@@ -11,6 +11,7 @@ FUNCTION IMF(mass,pset,mass_weighted)
 
   REAL(SP), DIMENSION(:), INTENT(in) :: mass
   TYPE(PARAMS), INTENT(in) :: pset
+  TYPE(IMF_RUNTIME), INTENT(in) :: imf_state
   LOGICAL, INTENT(in) :: mass_weighted
   REAL(SP), DIMENSION(SIZE(mass)) :: imf
   INTEGER :: i,n,imf_type_local
@@ -90,19 +91,23 @@ FUNCTION IMF(mass,pset,mass_weighted)
  
   !user-defined IMF
   IF (MOD(imf_type_local,10).EQ.5) THEN
+     IF (imf_state%n_user_imf.EQ.0) THEN
+        WRITE(*,*) 'IMF ERROR: custom IMF requested but PREPARE_IMF did not load any segments'
+        STOP
+     ENDIF
      DO i=1,size(mass)
-        IF (mass(i).GE.pset%imf_user_alpha(1,1).AND.&
-                mass(i).LT.pset%imf_user_alpha(2,1)) &
-                imf(i) = mass(i)**(-pset%imf_user_alpha(3,1))
+        IF (mass(i).GE.imf_state%user_alpha(1,1).AND.&
+                mass(i).LT.imf_state%user_alpha(2,1)) &
+                imf(i) = mass(i)**(-imf_state%user_alpha(3,1))
         imfcu = 1.0
-        DO n=2,pset%n_user_imf
-           IF (mass(i).GE.pset%imf_user_alpha(1,n).AND.&
-                mass(i).LT.pset%imf_user_alpha(2,n)) &
-                imf(i) = mass(i)**(-pset%imf_user_alpha(3,n))*&
-                pset%imf_user_alpha(1,n)**(-pset%imf_user_alpha(3,n-1)+&
-                pset%imf_user_alpha(3,n))*imfcu
-           imfcu = imfcu*pset%imf_user_alpha(1,n)**(-pset%imf_user_alpha(3,n-1)+&
-                pset%imf_user_alpha(3,n))
+        DO n=2,imf_state%n_user_imf
+           IF (mass(i).GE.imf_state%user_alpha(1,n).AND.&
+                mass(i).LT.imf_state%user_alpha(2,n)) &
+                imf(i) = mass(i)**(-imf_state%user_alpha(3,n))*&
+                imf_state%user_alpha(1,n)**(-imf_state%user_alpha(3,n-1)+&
+                imf_state%user_alpha(3,n))*imfcu
+           imfcu = imfcu*imf_state%user_alpha(1,n)**(-imf_state%user_alpha(3,n-1)+&
+                imf_state%user_alpha(3,n))
         ENDDO
      ENDDO
      IF (imf_type_local.EQ.15) imf = mass*imf
@@ -113,19 +118,20 @@ END FUNCTION IMF
 !---------------------------------------------------------------!
 !---------------------------------------------------------------!
 
-SUBROUTINE PREPARE_IMF(pset)
+SUBROUTINE PREPARE_IMF(pset,imf_state)
 
   USE SPS_VARS_MODULE_NAME
   IMPLICIT NONE
 
-  ! Populate per-call custom IMF data without mutating shared module state.
-  TYPE(PARAMS), INTENT(inout) :: pset
-  INTEGER :: i, stat, imf_unit
+  TYPE(PARAMS), INTENT(in) :: pset
+  TYPE(IMF_RUNTIME), INTENT(out) :: imf_state
+  INTEGER :: i, n_user_imf, stat, imf_unit
+  REAL(SP) :: m1, m2, alpha
 
-  pset%n_user_imf = 0
-  pset%imf_user_alpha = 0.
-  pset%imf_lower_limit = 0.08
-  pset%imf_upper_limit = 120.0
+  IF (ALLOCATED(imf_state%user_alpha)) DEALLOCATE(imf_state%user_alpha)
+  imf_state%n_user_imf = 0
+  imf_state%lower_limit = 0.08
+  imf_state%upper_limit = 120.0
 
   IF (pset%imf_type.LT.0.OR.pset%imf_type.GT.5) THEN
      WRITE(*,*) 'SSP_GEN ERROR: IMF type outside of range',pset%imf_type
@@ -140,18 +146,34 @@ SUBROUTINE PREPARE_IMF(pset)
         OPEN(NEWUNIT=imf_unit,FILE=TRIM(SPS_HOME)//'/data/'//TRIM(pset%imf_filename),&
              ACTION='READ',STATUS='OLD')
      ENDIF
-     DO i=1,100
-        READ(imf_unit,*,IOSTAT=stat) pset%imf_user_alpha(1,i),&
-             pset%imf_user_alpha(2,i),pset%imf_user_alpha(3,i)
-        IF (stat.NE.0) GOTO 29
+     n_user_imf = 0
+     DO
+        READ(imf_unit,*,IOSTAT=stat) m1, m2, alpha
+        IF (stat.NE.0) EXIT
+        n_user_imf = n_user_imf + 1
      ENDDO
-     WRITE(*,*) 'SSP_GEN ERROR: didnt finish reading in the imf file'
-     STOP
-29   CONTINUE
+     IF (stat.GT.0) THEN
+        WRITE(*,*) 'SSP_GEN ERROR: failed while counting the custom IMF file'
+        STOP
+     ENDIF
+     IF (n_user_imf.EQ.0) THEN
+        WRITE(*,*) 'SSP_GEN ERROR: custom IMF file is empty'
+        STOP
+     ENDIF
+     REWIND(imf_unit)
+     ALLOCATE(imf_state%user_alpha(3,n_user_imf))
+     DO i=1,n_user_imf
+        READ(imf_unit,*,IOSTAT=stat) imf_state%user_alpha(1,i),&
+             imf_state%user_alpha(2,i),imf_state%user_alpha(3,i)
+        IF (stat.NE.0) THEN
+           WRITE(*,*) 'SSP_GEN ERROR: failed while reading the custom IMF file'
+           STOP
+        ENDIF
+     ENDDO
      CLOSE(imf_unit)
-     pset%n_user_imf = i-1
-     pset%imf_lower_limit = pset%imf_user_alpha(1,1)
-     pset%imf_upper_limit = pset%imf_user_alpha(2,pset%n_user_imf)
+     imf_state%n_user_imf = n_user_imf
+     imf_state%lower_limit = imf_state%user_alpha(1,1)
+     imf_state%upper_limit = imf_state%user_alpha(2,n_user_imf)
   ENDIF
 
 END SUBROUTINE PREPARE_IMF

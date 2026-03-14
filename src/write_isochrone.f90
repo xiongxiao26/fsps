@@ -15,7 +15,7 @@ SUBROUTINE WRITE_ISOCHRONE(outfile,pset)
   REAL(SP), DIMENSION(nspec)  :: spec
   REAL(SP), DIMENSION(nm)     :: wght
   REAL(SP), DIMENSION(nbands) :: mags
-  TYPE(PARAMS) :: local_pset
+  TYPE(IMF_RUNTIME) :: imf_state
   !temp arrays for the isochrone data
   REAL(SP), DIMENSION(nt,nm)  :: mini,mact,logl,logt,logg,&
        ffco,phase,lmdot
@@ -25,8 +25,7 @@ SUBROUTINE WRITE_ISOCHRONE(outfile,pset)
   !---------------------------------------------------------------!
 
   ! PREPARE_IMF fills the per-call custom IMF table and bounds.
-  local_pset = pset
-  CALL PREPARE_IMF(local_pset)
+  CALL PREPARE_IMF(pset,imf_state)
 
   hb_wght = 0.0
   wght    = 0.0
@@ -54,7 +53,7 @@ SUBROUTINE WRITE_ISOCHRONE(outfile,pset)
   DO tt=1,nt
 
      !compute IMF-based weights
-     CALL IMF_WEIGHT(mini(tt,:),wght,nmass(tt),local_pset)
+     CALL IMF_WEIGHT(mini(tt,:),wght,nmass(tt),pset,imf_state)
 
      !modify the horizontal branch
      !need the hb weight for the blue stragglers too
