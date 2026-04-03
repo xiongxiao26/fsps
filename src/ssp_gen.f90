@@ -183,6 +183,9 @@ SUBROUTINE SSP_GEN(pset,mass_ssp,lbol_ssp,spec_ssp)
 
      ENDDO
 
+     DEALLOCATE(mini,mact,logl,logt,logg,ffco,phase,lmdot)
+     CALL RESET_IMF(imf_state)
+
   ENDIF
 
   !-------------------------------------------------------------!
@@ -208,9 +211,7 @@ SUBROUTINE SSP_GEN(pset,mass_ssp,lbol_ssp,spec_ssp)
   !-------------------------------------------------------------!
 
   IF (add_neb_emission.EQ.2) THEN
-     IF (.NOT.ALLOCATED(tspec_ssp)) ALLOCATE(tspec_ssp(nspec,ntfull))
-     CALL ADD_NEBULAR(pset,spec_ssp,tspec_ssp)
-     spec_ssp = tspec_ssp
+     CALL ADD_NEBULAR(pset,spec_ssp)
   ENDIF
 
   !-------------------------------------------------------------!
@@ -218,9 +219,7 @@ SUBROUTINE SSP_GEN(pset,mass_ssp,lbol_ssp,spec_ssp)
   !-------------------------------------------------------------!
 
   IF (add_xrb_emission.EQ.1) THEN
-     IF (.NOT.ALLOCATED(tspec_ssp)) ALLOCATE(tspec_ssp(nspec,ntfull))
-     CALL ADD_XRB(pset,spec_ssp,tspec_ssp)
-     spec_ssp = tspec_ssp
+     CALL ADD_XRB(pset,spec_ssp)
   ENDIF
 
   !-------------------------------------------------------------!

@@ -118,6 +118,23 @@ END FUNCTION IMF
 !---------------------------------------------------------------!
 !---------------------------------------------------------------!
 
+SUBROUTINE RESET_IMF(imf_state)
+
+  USE SPS_VARS_MODULE_NAME
+  IMPLICIT NONE
+
+  TYPE(IMF_RUNTIME), INTENT(inout) :: imf_state
+
+  IF (ALLOCATED(imf_state%user_alpha)) DEALLOCATE(imf_state%user_alpha)
+  imf_state%n_user_imf = 0
+  imf_state%lower_limit = 0.08
+  imf_state%upper_limit = 120.0
+
+END SUBROUTINE RESET_IMF
+
+!---------------------------------------------------------------!
+!---------------------------------------------------------------!
+
 SUBROUTINE PREPARE_IMF(pset,imf_state)
 
   USE SPS_VARS_MODULE_NAME
@@ -128,10 +145,7 @@ SUBROUTINE PREPARE_IMF(pset,imf_state)
   INTEGER :: i, n_user_imf, stat, imf_unit
   REAL(SP) :: m1, m2, alpha
 
-  IF (ALLOCATED(imf_state%user_alpha)) DEALLOCATE(imf_state%user_alpha)
-  imf_state%n_user_imf = 0
-  imf_state%lower_limit = 0.08
-  imf_state%upper_limit = 120.0
+  CALL RESET_IMF(imf_state)
 
   IF (pset%imf_type.LT.0.OR.pset%imf_type.GT.5) THEN
      WRITE(*,*) 'SSP_GEN ERROR: IMF type outside of range',pset%imf_type

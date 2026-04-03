@@ -97,5 +97,7 @@ SUBROUTINE SBF(pset,outfile)
 
   CLOSE(56)
 
+  CALL RESET_IMF(imf_state)
+
 END SUBROUTINE SBF
  

@@ -1,4 +1,4 @@
-SUBROUTINE ADD_XRB(pset,sspi,sspo)
+SUBROUTINE ADD_XRB(pset,ssp)
 
   ! Routine to add emission from X-ray binaries
 
@@ -8,8 +8,7 @@ SUBROUTINE ADD_XRB(pset,sspi,sspo)
   INTEGER :: t,a1,z1
   REAL(SP) :: da,dz,tmpz
   TYPE(PARAMS), INTENT(in) :: pset
-  REAL(SP), INTENT(in), DIMENSION(nspec,ntfull)    :: sspi
-  REAL(SP), INTENT(inout), DIMENSION(nspec,ntfull) :: sspo
+  REAL(SP), INTENT(inout), DIMENSION(nspec,ntfull) :: ssp
   REAL(SP), DIMENSION(nspec) :: tmpspec
 
   !-----------------------------------------------------------!
@@ -21,8 +20,6 @@ SUBROUTINE ADD_XRB(pset,sspi,sspo)
   dz   = (tmpz-zmet_xrb(z1))/(zmet_xrb(z1+1)-zmet_xrb(z1))
   dz   = MAX(MIN(dz,1.0),0.0) !no extrapolation
 
-  sspo = sspi
- 
   DO t=1,nt
 
      !set up age interpolant
@@ -37,7 +34,7 @@ SUBROUTINE ADD_XRB(pset,sspi,sspo)
           (1-da)*dz* spec_xrb(:,a1,z1+1)+&
           da*dz* spec_xrb(:,a1+1,z1+1)
 
-     sspo(:,t) = sspo(:,t) + pset%frac_xrb * tmpspec
+     ssp(:,t) = ssp(:,t) + pset%frac_xrb * tmpspec
 
   ENDDO
 

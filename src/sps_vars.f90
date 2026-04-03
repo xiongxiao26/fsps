@@ -528,7 +528,7 @@ MODULE SPS_VARS_MODULE_NAME
   !the age of each isochrone, and the metallicity of each isochrone
   INTEGER, DIMENSION(nz,nt)  :: nmass_isoc=0
   REAL(SP), DIMENSION(nz,nt) :: timestep_isoc=0.
-  REAL(SP), DIMENSION(nz)    :: zlegend=-99.
+  REAL(SP), DIMENSION(nz), TARGET :: zlegend=-99.
   REAL(SP), DIMENSION(nzinit):: zlegendinit=-99.
 
   !arrays for the full Z-dep SSP spectra

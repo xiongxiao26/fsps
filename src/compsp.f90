@@ -17,7 +17,6 @@ SUBROUTINE COMPSP(write_compsp, nzin, outfile,&
 
   TYPE(COMPSPOUT), INTENT(inout), DIMENSION(ntfull) :: ocompsp
 
-  REAL(SP), ALLOCATABLE, DIMENSION(:,:,:)   :: spec_ssp
   REAL(SP), ALLOCATABLE, DIMENSION(:,:,:) :: emlin_ssp
   REAL(SP), DIMENSION(nemline) :: emlin_csp
   REAL(SP) :: lbol_csp, mass_csp, mdust_csp, mformed_csp
@@ -74,17 +73,18 @@ SUBROUTINE COMPSP(write_compsp, nzin, outfile,&
   ! We should probably only do this for ages up to tage, if it is set.
   ! Also we will operate on copies of the spectra
 
-  ALLOCATE(spec_ssp(nspec,ntfull,nzin),emlin_ssp(nemline,ntfull,nzin))
-  spec_ssp = tspec_ssp
+  ALLOCATE(emlin_ssp(nemline,ntfull,nzin))
 
   ! Add nebular emission
   if (add_neb_emission.EQ.1) then
-     if (nzin.GT.1) then
-        WRITE(*,*) 'COMPSP ERROR: cannot handle both nebular '//&
-             'emission and multi-metallicity SSPs in compsp'
-        STOP
-     endif
-     call add_nebular(pset, tspec_ssp(:,:,1), spec_ssp(:,:,1), emlin_ssp(:,:,1))
+     WRITE(*,*) 'COMPSP ERROR: cannot nebular emission in compsp'
+     STOP
+     ! if (nzin.GT.1) then
+     !   WRITE(*,*) 'COMPSP ERROR: cannot handle both nebular '//&
+     !        'emission and multi-metallicity SSPs in compsp'
+     !   STOP
+     ! endif
+     ! call add_nebular(pset, tspec_ssp(:,:,1), emlin_ssp(:,:,1))
   else
      emlin_ssp = 0.
   endif
@@ -117,7 +117,7 @@ SUBROUTINE COMPSP(write_compsp, nzin, outfile,&
      ! Get the spectrum for this age.  Note this is always normalized to one
      ! solar mass formed, so we actually need to renormalize if computing all
      ! ages, which is done using info from `sfhinfo`
-     call csp_gen(mass_ssp, lbol_ssp, spec_ssp, &
+     call csp_gen(mass_ssp, lbol_ssp, tspec_ssp, &
           pset, age, nzin, mass_csp, lbol_csp, spec_csp,&
           mdust_csp,emlin_ssp,emlin_csp,mformed_csp)
 
@@ -183,6 +183,8 @@ SUBROUTINE COMPSP(write_compsp, nzin, outfile,&
      endif
 
   enddo
+
+  DEALLOCATE(emlin_ssp)
 
   if (write_compsp.EQ.1.OR.write_compsp.EQ.3) CLOSE(10)
   if (write_compsp.EQ.2.OR.write_compsp.EQ.3) CLOSE(20)

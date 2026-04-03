@@ -35,21 +35,19 @@ MODULE SPS_UTILS
   END INTERFACE
 
   INTERFACE
-     SUBROUTINE ADD_NEBULAR(pset,sspi,sspo,nebemline)
+     SUBROUTINE ADD_NEBULAR(pset,ssp,nebemline)
        USE sps_vars
        TYPE(PARAMS), INTENT(in) :: pset
-       REAL(SP), INTENT(in), DIMENSION(nspec,ntfull)    :: sspi
-       REAL(SP), INTENT(inout), DIMENSION(nspec,ntfull) :: sspo
+       REAL(SP), INTENT(inout), DIMENSION(nspec,ntfull) :: ssp
        REAL(SP), INTENT(inout), DIMENSION(nemline,ntfull), OPTIONAL :: nebemline
      END SUBROUTINE ADD_NEBULAR
   END INTERFACE
 
   INTERFACE
-     SUBROUTINE ADD_XRB(pset,sspi,sspo)
+     SUBROUTINE ADD_XRB(pset,ssp)
        USE sps_vars
        TYPE(PARAMS), INTENT(in) :: pset
-       REAL(SP), INTENT(in), DIMENSION(nspec,ntfull)    :: sspi
-       REAL(SP), INTENT(inout), DIMENSION(nspec,ntfull) :: sspo
+       REAL(SP), INTENT(inout), DIMENSION(nspec,ntfull) :: ssp
      END SUBROUTINE ADD_XRB
   END INTERFACE
 

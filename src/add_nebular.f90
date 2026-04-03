@@ -1,7 +1,7 @@
-SUBROUTINE ADD_NEBULAR(pset,sspi,sspo,nebemline)
+SUBROUTINE ADD_NEBULAR(pset,ssp,nebemline)
 
   !routine to add nebular emission (both line and continuum)
-  !to input SSPs (sspi).  Returns SSPs as output (sspo).
+  !to input SSPs (ssp)
 
   USE SPS_VARS_MODULE_NAME
   IMPLICIT NONE
@@ -9,8 +9,7 @@ SUBROUTINE ADD_NEBULAR(pset,sspi,sspo,nebemline)
   INTEGER :: t,i,nti,a1,z1,u1
   REAL(SP) :: da,dz,du,dlam,qq
   TYPE(PARAMS), INTENT(in) :: pset
-  REAL(SP), INTENT(in), DIMENSION(nspec,ntfull)    :: sspi
-  REAL(SP), INTENT(inout), DIMENSION(nspec,ntfull) :: sspo
+  REAL(SP), INTENT(inout), DIMENSION(nspec,ntfull) :: ssp
   REAL(SP), INTENT(inout), DIMENSION(nemline,ntfull), OPTIONAL :: nebemline
   REAL(SP), DIMENSION(nemline) :: tmpnebline
   REAL(SP), DIMENSION(nspec)   :: tmpnebcont
@@ -50,20 +49,19 @@ SUBROUTINE ADD_NEBULAR(pset,sspi,sspo,nebemline)
      ENDDO
   ENDIF
 
-  sspo = sspi
   nebemline = 0.0
 
   DO t=1,nti
 
-     !remove ionizing photons from the stellar source
-     sspo(1:whlylim,t) = sspi(1:whlylim,t)*MAX(MIN(pset%frac_obrun,1.0),0.0)
-
      !the number of ionizing photons is computed here
      !some fraction of the stars are "runaways" which means
      !that they are not embedded in the HII region
-     qq = tsum(spec_nu(:whlylim),sspi(:whlylim,t)/spec_nu(:whlylim))/&
+     qq = tsum(spec_nu(:whlylim),ssp(:whlylim,t)/spec_nu(:whlylim))/&
           hplank*lsun
      qq = qq * (1-pset%frac_obrun)
+
+     !remove ionizing photons from the stellar source
+     ssp(1:whlylim,t) = ssp(1:whlylim,t)*MAX(MIN(pset%frac_obrun,1.0),0.0)
 
      !set up age interpolant
      a1 = MAX(MIN(locate(nebem_age,time_full(t)),nebnage-1),1)
@@ -84,7 +82,7 @@ SUBROUTINE ADD_NEBULAR(pset,sspi,sspo,nebemline)
                (dz)*(1-da)*(du)*     xnebem_cont(:,z1+1,a1,u1+1)+&
                (dz)*(da)*(1-du)*     xnebem_cont(:,z1+1,a1+1,u1)+&
                (dz)*(da)*(du)*       xnebem_cont(:,z1+1,a1+1,u1+1)
-            sspo(:,t) = sspo(:,t) + 10**tmpnebcont * qq
+            ssp(:,t) = ssp(:,t) + 10**tmpnebcont * qq
          ELSE
             tmpnebcont = &   !interpolate in Zgas, logU, age
                   (1-dz)*(1-da)*(1-du)* nebem_cont(:,z1,a1,u1)+&
@@ -95,7 +93,7 @@ SUBROUTINE ADD_NEBULAR(pset,sspi,sspo,nebemline)
                   (dz)*(1-da)*(du)*     nebem_cont(:,z1+1,a1,u1+1)+&
                   (dz)*(da)*(1-du)*     nebem_cont(:,z1+1,a1+1,u1)+&
                   (dz)*(da)*(du)*       nebem_cont(:,z1+1,a1+1,u1+1)
-            sspo(:,t) = sspo(:,t) + 10**tmpnebcont * qq
+            ssp(:,t) = ssp(:,t) + 10**tmpnebcont * qq
          ENDIF
      ENDIF
 
@@ -127,7 +125,7 @@ SUBROUTINE ADD_NEBULAR(pset,sspi,sspo,nebemline)
 
      IF (nebemlineinspec.EQ.1) THEN
         DO i=1,nemline
-           sspo(:,t) = sspo(:,t) + 10**tmpnebline(i)*qq*gaussnebarr(:,i)
+           ssp(:,t) = ssp(:,t) + 10**tmpnebline(i)*qq*gaussnebarr(:,i)
         ENDDO
      ENDIF
 
