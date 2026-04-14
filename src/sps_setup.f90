@@ -965,23 +965,23 @@ SUBROUTINE SPS_SETUP(zin)
 
      !set up a "master" array of normalized Gaussians
      !this makes the code much faster
-     IF (setup_nebular_gaussians.EQ.1) THEN
-        DO i=1,nemline
-           IF (smooth_velocity.EQ.1) THEN
-              !smoothing variable is km/s
-              dlam = nebem_line_pos(i)*nebular_smooth_init/clight*1E13
-           ELSE
-              !smoothing variable is A
-              dlam = nebular_smooth_init
-           ENDIF
-           !broaden the line to at least the resolution element
-           !of the spectrum (x2).
-           dlam = MAX(dlam,neb_res_min(i)*2)
-           gaussnebarr(:,i) = 1/SQRT(2*mypi)/dlam*&
-                EXP(-(spec_lambda-nebem_line_pos(i))**2/2/dlam**2)  / &
-                clight*nebem_line_pos(i)**2
-        ENDDO
-     ENDIF
+     ! IF (setup_nebular_gaussians.EQ.1) THEN
+     !    DO i=1,nemline
+     !       IF (smooth_velocity.EQ.1) THEN
+     !          !smoothing variable is km/s
+     !          dlam = nebem_line_pos(i)*nebular_smooth_init/clight*1E13
+     !       ELSE
+     !          !smoothing variable is A
+     !          dlam = nebular_smooth_init
+     !       ENDIF
+     !       !broaden the line to at least the resolution element
+     !       !of the spectrum (x2).
+     !       dlam = MAX(dlam,neb_res_min(i)*2)
+     !       gaussnebarr(:,i) = 1/SQRT(2*mypi)/dlam*&
+     !            EXP(-(spec_lambda-nebem_line_pos(i))**2/2/dlam**2)  / &
+     !            clight*nebem_line_pos(i)**2
+     !    ENDDO
+     ! ENDIF
 
   ENDIF
 

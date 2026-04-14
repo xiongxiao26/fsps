@@ -7,10 +7,11 @@ SUBROUTINE ADD_NEBULAR(pset,ssp,nebemline)
   IMPLICIT NONE
 
   INTEGER :: t,i,nti,a1,z1,u1
-  REAL(SP) :: da,dz,du,dlam,qq
+  REAL(SP) :: da,dz,du,qq
   TYPE(PARAMS), INTENT(in) :: pset
   REAL(SP), INTENT(inout), DIMENSION(nspec,ntfull) :: ssp
   REAL(SP), INTENT(inout), DIMENSION(nemline,ntfull), OPTIONAL :: nebemline
+  REAL(SP), ALLOCATABLE, DIMENSION(:,:) :: gaussnebarr
   REAL(SP), DIMENSION(nemline) :: tmpnebline
   REAL(SP), DIMENSION(nspec)   :: tmpnebcont
 
@@ -29,27 +30,12 @@ SUBROUTINE ADD_NEBULAR(pset,ssp,nebemline)
   du = (pset%gas_logu-nebem_logu(u1))/(nebem_logu(u1+1)-nebem_logu(u1))
   du = MAX(MIN(du,1.0),0.0) !no extrapolation
 
-  !set up a "master" array of normalized Gaussians
-  !in sps_setup.f90 this makes the code much faster
-  IF (setup_nebular_gaussians.EQ.0.AND.nebemlineinspec.EQ.1) THEN
-     DO i=1,nemline
-        IF (smooth_velocity.EQ.1) THEN
-           !smoothing variable is km/s
-           dlam = nebem_line_pos(i)*pset%sigma_smooth/clight*1E13
-        ELSE
-           !smoothing variable is A
-           dlam = pset%sigma_smooth
-        ENDIF
-        !broaden the line to at least the resolution element
-        !of the spectrum (x2).
-        dlam = MAX(dlam,neb_res_min(i)*2)
-        gaussnebarr(:,i) = 1/SQRT(2*mypi)/dlam*&
-             EXP(-(spec_lambda-nebem_line_pos(i))**2/2/dlam**2)  / &
-             clight*nebem_line_pos(i)**2
-     ENDDO
+  IF (nebemlineinspec.EQ.1) THEN
+     ALLOCATE(gaussnebarr(nspec,nemline))
+     CALL BUILD_NEBULAR_GAUSSIANS(pset,gaussnebarr)
   ENDIF
 
-  nebemline = 0.0
+  IF (PRESENT(nebemline)) nebemline = 0.0
 
   DO t=1,nti
 
@@ -131,5 +117,42 @@ SUBROUTINE ADD_NEBULAR(pset,ssp,nebemline)
 
   ENDDO
 
+  IF (ALLOCATED(gaussnebarr)) DEALLOCATE(gaussnebarr)
 
 END SUBROUTINE ADD_NEBULAR
+
+SUBROUTINE BUILD_NEBULAR_GAUSSIANS(pset,gaussnebarr)
+
+  USE SPS_VARS_MODULE_NAME
+  IMPLICIT NONE
+
+  INTEGER :: i
+  REAL(SP) :: dlam, nebular_sigma
+  TYPE(PARAMS), INTENT(in) :: pset
+  REAL(SP), INTENT(out), DIMENSION(nspec,nemline) :: gaussnebarr
+
+  ! These kernels depend on the active spectrum-generation request.
+  ! Keep them local to each call to avoid races between concurrent spectra.
+  IF (setup_nebular_gaussians.EQ.1) THEN
+     nebular_sigma = nebular_smooth_init
+  ELSE
+     nebular_sigma = pset%sigma_smooth
+  ENDIF
+
+  DO i=1,nemline
+     IF (smooth_velocity.EQ.1) THEN
+        !smoothing variable is km/s
+        dlam = nebem_line_pos(i)*nebular_sigma/clight*1E13
+     ELSE
+        !smoothing variable is A
+        dlam = nebular_sigma
+     ENDIF
+     !broaden the line to at least the resolution element
+     !of the spectrum (x2).
+     dlam = MAX(dlam,neb_res_min(i)*2)
+     gaussnebarr(:,i) = 1/SQRT(2*mypi)/dlam*&
+          EXP(-(spec_lambda-nebem_line_pos(i))**2/2/dlam**2)  / &
+          clight*nebem_line_pos(i)**2
+  ENDDO
+
+END SUBROUTINE BUILD_NEBULAR_GAUSSIANS

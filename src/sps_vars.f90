@@ -513,7 +513,7 @@ MODULE SPS_VARS_MODULE_NAME
   !minimum resolution for nebular lines, based
   !on the resolution of the spectral libraries.
   REAL(SP), DIMENSION(nspec)   :: neb_res_min=0.0
-  REAL(SP), DIMENSION(nspec,nemline) :: gaussnebarr=0.0
+  ! REAL(SP), DIMENSION(nspec,nemline) :: gaussnebarr=0.0
 
   !arrays for AGN dust
   REAL(SP), DIMENSION(nagndust)       :: agndust_tau=0.
